@@ -1,4 +1,5 @@
-import mongoose from "mongoose";
+import mongoose, { ValidatorProps } from "mongoose";
+import dayjs from "dayjs";
 
 const EventSchema = new mongoose.Schema(
   {
@@ -16,7 +17,14 @@ const EventSchema = new mongoose.Schema(
         type: Date, // Optional, only needed if it's a multi-day event
       },
       time: {
-        type: String, // Optional, if you need to store time as a string (e.g., "14:00")
+        type: String,
+        validate: {
+          validator: function (v: string) {
+            return dayjs(v, "HH:mm", true).isValid(); // Validate time using dayjs with strict parsing
+          },
+          message: (props: ValidatorProps) =>
+            `${props.value} is not a valid time format! Use HH:mm.`,
+        },
       },
     },
     category: {
