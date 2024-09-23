@@ -9,8 +9,10 @@ import passport from "passport";
 import "colors";
 import connectDb from "./config/db";
 
+// Decalre Port
 const PORT = process.env.PORT || 5500;
 
+// Initialise app
 const app = express();
 
 // Logger
