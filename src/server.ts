@@ -1,13 +1,15 @@
 import express from "express";
 import dotenv from "dotenv";
+dotenv.config();
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
 import passport from "passport";
-dotenv.config();
+import "colors";
+import connectDb from "./config/db";
 
-const PORT = process.env.PORT || 5400;
+const PORT = process.env.PORT || 5500;
 
 const app = express();
 
@@ -45,6 +47,19 @@ app.get("/", (req, res) => {
 });
 
 // Connect to DB and start the server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+connectDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(
+        `Server running in ${process.env.NODE_ENV} mode on port ${PORT}\n`
+          .yellow,
+        "-----------------------------------------------------------".yellow
+      );
+    });
+  })
+  .catch((err) => {
+    console.error(
+      `Error connecting to MongoDB: ${err.message}`.red.underline.bold
+    );
+    process.exit(1);
+  });
