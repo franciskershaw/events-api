@@ -50,6 +50,10 @@ const UserSchema = new mongoose.Schema(
       enum: ["google", "local"],
       required: true,
     },
+    preferences: {
+      type: Object,
+      default: {},
+    },
   },
   { timestamps: true }
 );
