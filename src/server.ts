@@ -9,7 +9,7 @@ import passport from "passport";
 import "colors";
 import connectDb from "./config/db";
 
-// Decalre Port
+// Declare port to run server on
 const PORT = process.env.PORT || 5500;
 
 // Initialise app
