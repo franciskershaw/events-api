@@ -6,6 +6,8 @@ import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
 import passport from "passport";
+import authRoutes from "./routes/auth";
+import userRoutes from "./routes/users";
 import "colors";
 import connectDb from "./config/db";
 
@@ -43,7 +45,10 @@ app.use(
 // Passport / Auth
 app.use(passport.initialize());
 
-// Routes (example for now)
+// Routes
+app.use("/api/users", userRoutes);
+app.use("/api/auth", authRoutes);
+
 app.get("/", (req, res) => {
   res.send("Hello, TypeScript with Express!");
 });
