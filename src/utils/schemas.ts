@@ -60,3 +60,29 @@ export const newEventSchema = Joi.object({
   }),
   extraInfo: Joi.string().optional(),
 });
+
+export const updateEventSchema = Joi.object({
+  title: Joi.string().trim().optional(),
+  date: Joi.object({
+    start: Joi.date().optional(),
+    end: Joi.date().optional(),
+    time: Joi.string()
+      .pattern(/^\d{2}:\d{2}$/)
+      .custom((value, helpers) => {
+        if (!dayjs(value, "HH:mm", true).isValid()) {
+          return helpers.error("string.pattern.base", {
+            message: `${value} is not a valid time format! Use HH:mm.`,
+          });
+        }
+        return value;
+      })
+      .messages({
+        "string.pattern.base": "Time must be in HH:mm format.",
+      }),
+  }).optional(),
+  location: Joi.string().trim().optional(),
+  category: Joi.string().optional(),
+  additionalAttributes: Joi.object().optional(),
+  sharedWith: Joi.array().items(Joi.string()).optional(),
+  extraInfo: Joi.string().optional(),
+});
