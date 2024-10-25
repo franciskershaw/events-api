@@ -1,5 +1,23 @@
-import mongoose, { ValidatorProps } from "mongoose";
+import mongoose, { ValidatorProps, Model, Document } from "mongoose";
 import dayjs from "dayjs";
+
+export interface IEvent extends Document {
+  _id: mongoose.Types.ObjectId;
+  title: string;
+  date: {
+    start: Date;
+    end?: Date;
+    time?: string;
+  };
+  location: string;
+  category: mongoose.Types.ObjectId;
+  additionalAttributes: Object;
+  sharedWith: mongoose.Types.ObjectId[];
+  extraInfo: string;
+  createdBy: mongoose.Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
 
 const EventSchema = new mongoose.Schema(
   {
