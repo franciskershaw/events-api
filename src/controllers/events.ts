@@ -83,3 +83,45 @@ export const updateEvent = async (
     next(err);
   }
 };
+
+// Delete an event
+export const deleteEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = (req.user as IUser)._id;
+    const eventId = req.params.eventId;
+
+    const user = User.findOneAndUpdate(
+      { _id: userId, events: { $in: [eventId] } },
+      { $pull: { events: eventId } },
+      { new: true, session }
+    );
+
+    if (!user) {
+      throw new Error("Event not found for the user");
+    }
+
+    const event = await Event.findByIdAndDelete(eventId, {
+      session,
+    });
+
+    if (!event) {
+      throw new Error("Event not found");
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json(event);
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
