@@ -10,6 +10,10 @@ export const registerSchema = Joi.object({
     "string.min": "Password must be at least 6 characters long.",
     "any.required": "Password is required.",
   }),
+  name: Joi.string().trim().required().messages({
+    "string.empty": "Please add a name.",
+    "any.required": "Name is required.",
+  }),
 });
 
 export const loginSchema = Joi.object({

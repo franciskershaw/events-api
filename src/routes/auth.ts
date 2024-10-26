@@ -1,6 +1,6 @@
 import express from "express";
 import passport from "passport";
-import { login, googleCallback, logout } from "../controllers/auth";
+import { login, googleCallback, logout, register } from "../controllers/auth";
 import { refreshTokens } from "../middleware/authMiddleware";
 import { GOOGLE_PROVIDER } from "../utils/constants";
 
@@ -8,6 +8,7 @@ const router = express.Router();
 
 // Local login route
 router.post("/login", login);
+router.post("/register", register);
 
 // Google OAuth route
 router.get(

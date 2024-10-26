@@ -5,7 +5,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
-import passport from "passport";
+import passport from "./config/passport";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
 import "colors";
