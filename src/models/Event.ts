@@ -1,5 +1,4 @@
 import mongoose, { ValidatorProps, Model, Document } from "mongoose";
-import dayjs from "dayjs";
 
 export interface IEvent extends Document {
   _id: mongoose.Types.ObjectId;
@@ -7,7 +6,6 @@ export interface IEvent extends Document {
   date: {
     start: Date;
     end?: Date;
-    time?: string;
   };
   location: string;
   category: mongoose.Types.ObjectId;
@@ -33,16 +31,6 @@ const EventSchema = new mongoose.Schema(
       },
       end: {
         type: Date, // Optional, only needed if it's a multi-day event
-      },
-      time: {
-        type: String,
-        validate: {
-          validator: function (v: string) {
-            return dayjs(v, "HH:mm", true).isValid(); // Validate time using dayjs with strict parsing
-          },
-          message: (props: ValidatorProps) =>
-            `${props.value} is not a valid time format! Use HH:mm.`,
-        },
       },
     },
     location: {
@@ -75,4 +63,5 @@ const EventSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Event", EventSchema);
+const Event: Model<IEvent> = mongoose.model<IEvent>("Event", EventSchema);
+export default Event;

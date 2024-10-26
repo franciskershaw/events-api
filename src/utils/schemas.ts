@@ -39,20 +39,11 @@ export const newEventSchema = Joi.object({
     end: Joi.date().greater(Joi.ref("start")).optional().messages({
       "date.greater": "End date must be after the start date.",
     }),
-    time: Joi.string()
-      .pattern(/^\d{2}:\d{2}$/)
-      .custom((value, helpers) => {
-        if (!dayjs(value, "HH:mm", true).isValid()) {
-          return helpers.error("string.pattern.base", {
-            message: `${value} is not a valid time format! Use HH:mm.`,
-          });
-        }
-        return value;
-      })
-      .messages({
-        "string.pattern.base": "Time must be in HH:mm format.",
-      }),
-  }).required(),
+  })
+    .required()
+    .messages({
+      "any.required": "Date information is required for the event.",
+    }),
   location: Joi.string().trim().optional(),
   category: Joi.string().required().messages({
     "string.base": "Please specify a valid category ID.",
@@ -68,25 +59,27 @@ export const newEventSchema = Joi.object({
 export const updateEventSchema = Joi.object({
   title: Joi.string().trim().optional(),
   date: Joi.object({
-    start: Joi.date().optional(),
-    end: Joi.date().optional(),
-    time: Joi.string()
-      .pattern(/^\d{2}:\d{2}$/)
-      .custom((value, helpers) => {
-        if (!dayjs(value, "HH:mm", true).isValid()) {
-          return helpers.error("string.pattern.base", {
-            message: `${value} is not a valid time format! Use HH:mm.`,
-          });
-        }
-        return value;
-      })
-      .messages({
-        "string.pattern.base": "Time must be in HH:mm format.",
-      }),
-  }).optional(),
+    start: Joi.date().optional().messages({
+      "date.base": "Please add a valid start date for the event.",
+    }),
+    end: Joi.date().optional().greater(Joi.ref("start")).messages({
+      "date.greater": "End date must be after the start date.",
+    }),
+  })
+    .or("start", "end")
+    .optional()
+    .messages({
+      "object.missing": "At least one of start or end date must be provided.",
+    }),
   location: Joi.string().trim().optional(),
-  category: Joi.string().optional(),
+  category: Joi.string().optional().messages({
+    "string.base": "Please specify a valid category ID.",
+  }),
   additionalAttributes: Joi.object().optional(),
   sharedWith: Joi.array().items(Joi.string()).optional(),
   extraInfo: Joi.string().optional(),
-});
+})
+  .min(1)
+  .messages({
+    "object.min": "At least one field must be updated.",
+  });
