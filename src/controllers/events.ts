@@ -129,6 +129,20 @@ export const deleteEvent = async (
   }
 };
 
+// Get event categories
+export const getEventCategories = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const categories = await EventCategory.find();
+    res.status(200).json(categories);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Create event category (For dev use only)
 // export const createEventCategory = async (
 //   req: Request,
