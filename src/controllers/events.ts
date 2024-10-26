@@ -102,7 +102,7 @@ export const deleteEvent = async (
     const userId = (req.user as IUser)._id;
     const eventId = req.params.eventId;
 
-    const user = User.findOneAndUpdate(
+    const user = await User.findByIdAndUpdate(
       { _id: userId, events: { $in: [eventId] } },
       { $pull: { events: eventId } },
       { new: true, session }
@@ -112,10 +112,8 @@ export const deleteEvent = async (
       throw new Error("Event not found for the user");
     }
 
-    const event = await Event.findByIdAndDelete(eventId, {
-      session,
-    });
-
+    // Delete the event
+    const event = await Event.findByIdAndDelete(eventId, { session });
     if (!event) {
       throw new Error("Event not found");
     }
@@ -123,7 +121,7 @@ export const deleteEvent = async (
     await session.commitTransaction();
     session.endSession();
 
-    res.status(200).json(event);
+    res.status(200).json({ message: "Event deleted successfully" });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
