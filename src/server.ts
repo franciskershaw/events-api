@@ -8,6 +8,7 @@ import cors from "cors";
 import passport from "./config/passport";
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
+import eventRoutes from "./routes/events";
 import "colors";
 import connectDb from "./config/db";
 
@@ -48,6 +49,7 @@ app.use(passport.initialize());
 // Routes
 app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello, TypeScript with Express!");

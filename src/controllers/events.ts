@@ -4,6 +4,7 @@ import User, { IUser } from "../models/User";
 import validateRequest from "../utils/validate";
 import { newEventSchema, updateEventSchema } from "../utils/schemas";
 import Event, { IEvent } from "../models/Event";
+import EventCategory from "../models/EventCategory";
 
 // Create an event and add it to the user's array of events
 export const createEvent = async (
@@ -125,3 +126,18 @@ export const deleteEvent = async (
     next(err);
   }
 };
+
+// Create event category (For dev use only)
+// export const createEventCategory = async (
+//   req: Request,
+//   res: Response,
+//   next: NextFunction
+// ) => {
+//   try {
+//     const category = new EventCategory(req.body);
+//     await category.save();
+//     res.status(200).json(category);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
