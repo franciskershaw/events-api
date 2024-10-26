@@ -4,6 +4,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import bcrypt from "bcryptjs";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
 import User from "../models/User";
+import { generateConnectionId } from "../controllers/auth";
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
   throw new Error("Google OAuth credentials are not defined");
@@ -63,6 +64,7 @@ passport.use(
               email: profile.emails?.[0].value,
               name: profile.displayName,
               provider: "google",
+              connectionId: await generateConnectionId(),
             });
             await user.save();
           }

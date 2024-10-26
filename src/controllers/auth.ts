@@ -21,7 +21,7 @@ const sendTokens = (res: Response, user: IUser, status: number = 200) => {
   res.status(status).json({ user, accessToken });
 };
 
-const generateConnectionId = async (length = 8): Promise<string> => {
+export const generateConnectionId = async (length = 8): Promise<string> => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let connectionId;
 
