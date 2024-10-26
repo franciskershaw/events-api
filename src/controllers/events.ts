@@ -23,7 +23,10 @@ export const createEvent = async (
       throw new Error("User not found");
     }
 
-    const event = new Event(validateRequest(req.body, newEventSchema));
+    const eventData = validateRequest(req.body, newEventSchema);
+    eventData.createdBy = userId;
+
+    const event = new Event(eventData);
 
     await event.save({ session });
 
@@ -65,9 +68,10 @@ export const updateEvent = async (
 
     const value = validateRequest(req.body, updateEventSchema);
 
-    const event = await Event.findByIdAndUpdate(eventId, ...value, {
+    const event = await Event.findByIdAndUpdate(eventId, value, {
       new: true,
       session,
+      omitUndefined: true,
     });
 
     if (!event) {

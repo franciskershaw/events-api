@@ -1,4 +1,3 @@
-import dayjs from "dayjs";
 import Joi from "joi";
 
 export const registerSchema = Joi.object({
@@ -36,9 +35,14 @@ export const newEventSchema = Joi.object({
       "date.base": "Please add a valid start date for the event.",
       "any.required": "Start date is required for the event.",
     }),
-    end: Joi.date().greater(Joi.ref("start")).optional().messages({
-      "date.greater": "End date must be after the start date.",
-    }),
+    end: Joi.date()
+      .min(Joi.ref("start"))
+      .default(Joi.ref("start"))
+      .required()
+      .messages({
+        "date.min": "End date must be the same as or after the start date.",
+        "any.required": "End date is required for the event.",
+      }),
   })
     .required()
     .messages({
@@ -59,17 +63,23 @@ export const newEventSchema = Joi.object({
 export const updateEventSchema = Joi.object({
   title: Joi.string().trim().optional(),
   date: Joi.object({
-    start: Joi.date().optional().messages({
+    start: Joi.date().required().messages({
       "date.base": "Please add a valid start date for the event.",
+      "any.required": "Start date is required when updating date.",
     }),
-    end: Joi.date().optional().greater(Joi.ref("start")).messages({
-      "date.greater": "End date must be after the start date.",
-    }),
+    end: Joi.date()
+      .min(Joi.ref("start"))
+      .default(Joi.ref("start"))
+      .required()
+      .messages({
+        "date.min": "End date must be the same as or after the start date.",
+        "any.required": "End date is required when updating date.",
+      }),
   })
-    .or("start", "end")
     .optional()
     .messages({
-      "object.missing": "At least one of start or end date must be provided.",
+      "object.base":
+        "Both start and end date must be provided when updating date.",
     }),
   location: Joi.string().trim().optional(),
   category: Joi.string().optional().messages({
