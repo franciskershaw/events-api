@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "docker:build": "docker build -t event-api .",
+    "docker:prod": "docker run -p 5500:5500 event-api"
   },
   "keywords": [],
   "author": "",
