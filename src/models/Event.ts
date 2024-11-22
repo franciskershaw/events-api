@@ -1,4 +1,4 @@
-import mongoose, { ValidatorProps, Model, Document } from "mongoose";
+import mongoose, { Document, Model } from "mongoose";
 
 export interface IEvent extends Document {
   _id: mongoose.Types.ObjectId;
@@ -9,10 +9,10 @@ export interface IEvent extends Document {
   };
   location: string;
   category: mongoose.Types.ObjectId;
-  additionalAttributes: Object;
+  additionalAttributes?: Record<string, any>;
   sharedWith: mongoose.Types.ObjectId[];
-  extraInfo: string;
   createdBy: mongoose.Types.ObjectId;
+  extraInfo?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -30,7 +30,7 @@ const EventSchema = new mongoose.Schema(
         required: [true, "Please add a start date for the event"],
       },
       end: {
-        type: Date, // Optional, only needed if it's a multi-day event
+        type: Date,
       },
     },
     location: {
@@ -43,7 +43,7 @@ const EventSchema = new mongoose.Schema(
       required: [true, "Please specify the event category"],
     },
     additionalAttributes: {
-      type: Object, // Flexible object for category-specific fields (e.g., kickOff for sport)
+      type: Object,
     },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,

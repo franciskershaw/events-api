@@ -1,19 +1,20 @@
-import mongoose, { Model } from "mongoose";
+import mongoose, { Document, Model } from "mongoose";
 
 export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
-  password: string;
+  password?: string;
   name: string;
-  role: string;
-  events: any[];
-  connections: any[];
+  role: "user" | "admin";
   connectionId: string;
-  provider: string;
-  googleId: string;
+  provider: "google" | "local";
+  googleId?: string;
+  preferences: {
+    theme?: string;
+    defaultView?: string;
+  };
   createdAt: Date;
   updatedAt: Date;
-  preferences: any;
 }
 
 const UserSchema = new mongoose.Schema(
@@ -44,18 +45,6 @@ const UserSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    events: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "Event",
-      },
-    ],
-    connections: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
     connectionId: {
       type: String,
       required: true,
@@ -67,8 +56,8 @@ const UserSchema = new mongoose.Schema(
       required: true,
     },
     preferences: {
-      type: Object,
-      default: {},
+      theme: { type: String, default: "light" },
+      defaultView: { type: String, default: "upcoming" },
     },
   },
   { timestamps: true }
