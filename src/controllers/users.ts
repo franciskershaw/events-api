@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "../models/User";
 import { generateAccessToken } from "../utils/jwt";
 import validateRequest from "../utils/validate";
-import { connectUserSchema } from "../utils/schemas";
+import { connectUserSchema, removeConnectionSchema } from "../utils/schemas";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import mongoose from "mongoose";
 
@@ -70,6 +70,54 @@ export const connectUsers = async (
     session.endSession();
 
     res.status(200).json({ message: "Users connected successfully." });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
+
+export const removeConnection = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = (req.user as IUser)._id;
+    const { targetUserId } = validateRequest(req.body, removeConnectionSchema);
+
+    const authenticatedUser = await User.findById(userId).session(session);
+    const targetUser = await User.findById(targetUserId).session(session);
+
+    if (!authenticatedUser || !targetUser) {
+      throw new NotFoundError("One or both users not found.");
+    }
+
+    if (
+      !authenticatedUser.connections.includes(targetUser._id) ||
+      !targetUser.connections.includes(authenticatedUser._id)
+    ) {
+      throw new BadRequestError("Users are not connected.");
+    }
+
+    authenticatedUser.connections = authenticatedUser.connections.filter(
+      (conn) => conn.toString() !== targetUser._id.toString()
+    );
+
+    targetUser.connections = targetUser.connections.filter(
+      (conn) => conn.toString() !== authenticatedUser._id.toString()
+    );
+
+    await authenticatedUser.save({ session });
+    await targetUser.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({ message: "Connection removed successfully." });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();

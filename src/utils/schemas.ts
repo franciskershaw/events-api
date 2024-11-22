@@ -122,3 +122,13 @@ export const connectUserSchema = Joi.object({
     "any.required": "Connection ID is required.",
   }),
 });
+
+export const removeConnectionSchema = Joi.object({
+  targetUserId: Joi.string()
+    .regex(/^[a-fA-F0-9]{24}$/)
+    .required()
+    .messages({
+      "string.pattern.base": "Target user ID must be a valid ObjectId.",
+      "any.required": "Target user ID is required.",
+    }),
+});
