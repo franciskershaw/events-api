@@ -113,3 +113,12 @@ export const updateEventSchema = Joi.object({
   .messages({
     "object.min": "At least one field must be updated.",
   });
+
+export const connectUserSchema = Joi.object({
+  connectionId: Joi.string().alphanum().length(8).required().messages({
+    "string.alphanum":
+      "Connection ID must contain only alphanumeric characters.",
+    "string.length": "Connection ID must be exactly 8 characters long.",
+    "any.required": "Connection ID is required.",
+  }),
+});

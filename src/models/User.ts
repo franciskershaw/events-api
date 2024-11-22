@@ -13,6 +13,7 @@ export interface IUser extends Document {
     theme?: string;
     defaultView?: string;
   };
+  connections: mongoose.Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -59,6 +60,12 @@ const UserSchema = new mongoose.Schema(
       theme: { type: String, default: "light" },
       defaultView: { type: String, default: "upcoming" },
     },
+    connections: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
