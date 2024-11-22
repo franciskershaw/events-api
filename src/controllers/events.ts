@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
-import { IUser } from "../models/User";
+import User, { IUser } from "../models/User";
 import validateRequest from "../utils/validate";
 import { newEventSchema, updateEventSchema } from "../utils/schemas";
 import Event from "../models/Event";
 import SharedEvent from "../models/SharedEvent";
 import EventCategory from "../models/EventCategory";
+import mongoose from "mongoose";
+import { BadRequestError, NotFoundError } from "../utils/errors";
 
 // Create an event and add it to the user's array of events
 export const createEvent = async (
@@ -224,6 +226,103 @@ export const getPastEvents = async (
       },
     });
   } catch (err) {
+    next(err);
+  }
+};
+
+export const privatiseEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = (req.user as any)._id;
+    const { eventId } = req.params;
+
+    const event = await Event.findOne({
+      _id: eventId,
+      createdBy: userId,
+    }).session(session);
+    if (!event) {
+      throw new NotFoundError(
+        "Event not found or you do not have permission to modify it."
+      );
+    }
+
+    await SharedEvent.deleteMany({ event: event._id }).session(session);
+
+    if (event.sharedWith) {
+      event.sharedWith = [];
+      await event.save({ session });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(200).json({ message: "Event made private." });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
+
+export const shareEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = (req.user as IUser)._id;
+    const { eventId } = req.params;
+
+    const event = await Event.findOne({
+      _id: eventId,
+      createdBy: userId,
+    }).session(session);
+
+    if (!event) {
+      throw new NotFoundError(
+        "Event not found or you do not have permission to share it."
+      );
+    }
+
+    const user = await User.findById(userId)
+      .populate("connections")
+      .session(session);
+    if (!user || !user.connections || user.connections.length === 0) {
+      throw new BadRequestError(
+        "You have no connections to share this event with."
+      );
+    }
+
+    const sharedEvents = user.connections.map((connection) => ({
+      user: connection._id,
+      event: event._id,
+    }));
+
+    await SharedEvent.insertMany(sharedEvents, { session });
+
+    if (event.sharedWith) {
+      event.sharedWith = user.connections.map((connection) => connection._id);
+      await event.save({ session });
+    }
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res
+      .status(200)
+      .json({ message: "Event shared successfully with all connections." });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
     next(err);
   }
 };

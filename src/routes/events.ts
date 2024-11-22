@@ -7,7 +7,8 @@ import {
   getEventCategories,
   getUserEvents,
   getPastEvents,
-  //   createEventCategory,
+  privatiseEvent,
+  shareEvent,
 } from "../controllers/events";
 import { authenticateToken } from "../middleware/authMiddleware";
 
@@ -19,6 +20,12 @@ router.get("/past", authenticateToken, asyncHandler(getPastEvents));
 router.post("/", authenticateToken, asyncHandler(createEvent));
 router.put("/:eventId", authenticateToken, asyncHandler(updateEvent));
 router.delete("/:eventId", authenticateToken, asyncHandler(deleteEvent));
+router.delete(
+  "/:eventId/private",
+  authenticateToken,
+  asyncHandler(privatiseEvent)
+);
+router.post("/:eventId/share", authenticateToken, asyncHandler(shareEvent));
 
 // create event category (for dev use only)
 // router.post("/category", asyncHandler(createEventCategory));
