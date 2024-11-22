@@ -102,6 +102,7 @@ export const getEventCategories = async (
   }
 };
 
+// Get user's events (upcoming or ongoing)
 export const getUserEvents = async (
   req: Request,
   res: Response,
@@ -144,6 +145,84 @@ export const getUserEvents = async (
     const allEvents = [...createdEvents, ...sharedEvents];
 
     res.status(200).json(allEvents);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getPastEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req.user as any)._id;
+
+    const {
+      page = 1,
+      limit = 10,
+      category,
+      search,
+      sortBy = "date.end",
+      order = "desc",
+    } = req.query;
+
+    const pageNumber = parseInt(page as string, 10);
+    const pageLimit = parseInt(limit as string, 10);
+
+    const filters: any = {
+      "date.end": { $lt: new Date() },
+    };
+
+    if (category) filters.category = category;
+    if (search) {
+      const regex = new RegExp(search as string, "i");
+      filters.$or = [{ title: regex }, { location: regex }];
+    }
+
+    const createdEvents = await Event.find({
+      ...filters,
+      createdBy: userId,
+    })
+      .populate("category", "name icon")
+      .populate("createdBy", "name")
+      .sort({ [sortBy as string]: order === "asc" ? 1 : -1 })
+      .skip((pageNumber - 1) * pageLimit)
+      .limit(pageLimit)
+      .lean();
+
+    const sharedEventLinks = await SharedEvent.find({ user: userId })
+      .populate({
+        path: "event",
+        populate: [
+          { path: "category", select: "name icon" },
+          { path: "createdBy", select: "name" },
+        ],
+        match: filters,
+      })
+      .lean();
+
+    const sharedEvents = sharedEventLinks
+      .map((link: any) => link.event)
+      .filter(Boolean);
+
+    const allEvents = [...createdEvents, ...sharedEvents];
+
+    const totalEvents = allEvents.length;
+    const paginatedEvents = allEvents.slice(
+      (pageNumber - 1) * pageLimit,
+      pageNumber * pageLimit
+    );
+
+    res.status(200).json({
+      events: paginatedEvents,
+      pagination: {
+        currentPage: pageNumber,
+        totalPages: Math.ceil(totalEvents / pageLimit),
+        totalEvents,
+        limit: pageLimit,
+      },
+    });
   } catch (err) {
     next(err);
   }
