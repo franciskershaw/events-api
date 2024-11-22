@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
-import mongoose from "mongoose";
-import User, { IUser } from "../models/User";
+import { IUser } from "../models/User";
 import validateRequest from "../utils/validate";
 import { newEventSchema, updateEventSchema } from "../utils/schemas";
-import Event, { IEvent } from "../models/Event";
+import Event from "../models/Event";
+import SharedEvent from "../models/SharedEvent";
 import EventCategory from "../models/EventCategory";
 
 // Create an event and add it to the user's array of events
@@ -12,34 +12,31 @@ export const createEvent = async (
   res: Response,
   next: NextFunction
 ) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
     const userId = (req.user as IUser)._id;
-    const user = await User.findById(userId).session(session);
-
-    if (!user) {
-      throw new Error("User not found");
-    }
 
     const eventData = validateRequest(req.body, newEventSchema);
     eventData.createdBy = userId;
 
+    if (!eventData.date.end) {
+      eventData.date.end = eventData.date.start;
+    }
+
     const event = new Event(eventData);
+    await event.save();
 
-    await event.save({ session });
+    if (eventData.sharedWith && eventData.sharedWith.length > 0) {
+      const sharedEvents = eventData.sharedWith.map((sharedUserId: string) => ({
+        event: event._id,
+        user: sharedUserId,
+        permissions: "view",
+      }));
 
-    user.events.push(event._id);
-    await user.save({ session });
-
-    await session.commitTransaction();
-    session.endSession();
+      await SharedEvent.insertMany(sharedEvents);
+    }
 
     res.status(200).json(event);
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
     next(err);
   }
 };
@@ -50,27 +47,13 @@ export const updateEvent = async (
   res: Response,
   next: NextFunction
 ) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const userId = (req.user as IUser)._id;
     const eventId = req.params.eventId;
-
-    const user = await User.findOne({
-      _id: userId,
-      events: { $in: [eventId] },
-    }).session(session);
-
-    if (!user) {
-      throw new Error("Event not found for the user");
-    }
 
     const value = validateRequest(req.body, updateEventSchema);
 
     const event = await Event.findByIdAndUpdate(eventId, value, {
       new: true,
-      session,
       omitUndefined: true,
     });
 
@@ -78,13 +61,8 @@ export const updateEvent = async (
       throw new Error("Event not found");
     }
 
-    await session.commitTransaction();
-    session.endSession();
-
     res.status(200).json(event);
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
     next(err);
   }
 };
@@ -95,36 +73,17 @@ export const deleteEvent = async (
   res: Response,
   next: NextFunction
 ) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
   try {
-    const userId = (req.user as IUser)._id;
     const eventId = req.params.eventId;
 
-    const user = await User.findByIdAndUpdate(
-      { _id: userId, events: { $in: [eventId] } },
-      { $pull: { events: eventId } },
-      { new: true, session }
-    );
+    const event = await Event.findByIdAndDelete(eventId);
 
-    if (!user) {
-      throw new Error("Event not found for the user");
-    }
-
-    // Delete the event
-    const event = await Event.findByIdAndDelete(eventId, { session });
     if (!event) {
       throw new Error("Event not found");
     }
 
-    await session.commitTransaction();
-    session.endSession();
-
     res.status(200).json({ message: "Event deleted successfully" });
   } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
     next(err);
   }
 };
