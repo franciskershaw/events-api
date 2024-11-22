@@ -102,6 +102,53 @@ export const getEventCategories = async (
   }
 };
 
+export const getUserEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req.user as any)._id;
+
+    const createdEvents = await Event.find({
+      $or: [
+        { "date.end": { $gte: new Date() } },
+        { "date.start": { $gte: new Date() } },
+      ],
+      createdBy: userId,
+    })
+      .populate("category", "name icon")
+      .populate("createdBy", "name")
+      .lean();
+
+    const sharedEventLinks = await SharedEvent.find({ user: userId })
+      .populate({
+        path: "event",
+        populate: [
+          { path: "category", select: "name icon" },
+          { path: "createdBy", select: "name" },
+        ],
+        match: {
+          $or: [
+            { "date.end": { $gte: new Date() } },
+            { "date.start": { $gte: new Date() } },
+          ],
+        },
+      })
+      .lean();
+
+    const sharedEvents = sharedEventLinks
+      .map((link: any) => link.event)
+      .filter(Boolean);
+
+    const allEvents = [...createdEvents, ...sharedEvents];
+
+    res.status(200).json(allEvents);
+  } catch (err) {
+    next(err);
+  }
+};
+
 // Create event category (For dev use only)
 // export const createEventCategory = async (
 //   req: Request,
