@@ -327,6 +327,70 @@ export const shareEvent = async (
   }
 };
 
+export const addSharedEvent = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const userId = (req.user as any)._id;
+    const { eventId } = req.params;
+
+    const sharedEvent = await SharedEvent.findOne({
+      event: eventId,
+      user: userId,
+    })
+      .populate("event")
+      .session(session);
+
+    if (!sharedEvent) {
+      throw new NotFoundError("Shared event not found.");
+    }
+
+    const originalEvent = sharedEvent.event;
+    if (!originalEvent || !(originalEvent instanceof mongoose.Document)) {
+      throw new BadRequestError(
+        "The shared event does not contain valid event data."
+      );
+    }
+
+    const originalEventObject = originalEvent.toObject();
+
+    delete originalEventObject._id;
+    delete originalEventObject.createdBy;
+    delete originalEventObject.copiedFrom;
+    delete originalEventObject.createdAt;
+    delete originalEventObject.updatedAt;
+
+    const newEvent = new Event({
+      ...originalEventObject,
+      createdBy: userId,
+      copiedFrom: originalEvent._id,
+    });
+
+    await newEvent.save({ session });
+
+    await SharedEvent.deleteOne({ event: eventId, user: userId }).session(
+      session
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    res.status(201).json({
+      message: "Shared event added to your events successfully.",
+      event: newEvent,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    session.endSession();
+    next(err);
+  }
+};
+
 // Create event category (For dev use only)
 // export const createEventCategory = async (
 //   req: Request,

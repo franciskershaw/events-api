@@ -56,6 +56,11 @@ const EventSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    copiedFrom: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Event",
+      default: null,
+    },
     extraInfo: {
       type: String,
     },

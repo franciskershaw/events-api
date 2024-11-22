@@ -9,6 +9,7 @@ import {
   getPastEvents,
   privatiseEvent,
   shareEvent,
+  addSharedEvent,
 } from "../controllers/events";
 import { authenticateToken } from "../middleware/authMiddleware";
 
@@ -26,6 +27,7 @@ router.delete(
   asyncHandler(privatiseEvent)
 );
 router.post("/:eventId/share", authenticateToken, asyncHandler(shareEvent));
+router.post("/:eventId/add", authenticateToken, asyncHandler(addSharedEvent));
 
 // create event category (for dev use only)
 // router.post("/category", asyncHandler(createEventCategory));
