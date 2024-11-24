@@ -1,0 +1,23 @@
+version: "3.8"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev  # for development
+    ports:
+      - "5500:5500"
+    environment:
+      - NODE_ENV=development
+      - PORT=5400
+      - MONGO_URI=${MONGO_URI}
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - JWT_SECRET=${JWT_SECRET} 
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET} 
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} 
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET} 
+
+    volumes:
+      - .:/usr/src/app # Mount code for hot reloading
+      - /usr/src/app/node_modules # Avoids overwriting node_modules in container
+    command: npm run docker:dev # Use the docker:dev script for hot reloading
