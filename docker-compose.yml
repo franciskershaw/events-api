@@ -9,7 +9,7 @@ services:
       - "5500:5500"
     environment:
       - NODE_ENV=development
-      - PORT=5400
+      - PORT=5500
       - MONGO_URI=${MONGO_URI}
       - CORS_ORIGIN=${CORS_ORIGIN}
       - JWT_SECRET=${JWT_SECRET} 
