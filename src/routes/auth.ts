@@ -21,7 +21,7 @@ router.get(
   "/google/callback",
   passport.authenticate(GOOGLE_PROVIDER, {
     session: false,
-    failureRedirect: process.env.FRONTEND_URL,
+    failureRedirect: process.env.CORS_ORIGIN,
   }),
   googleCallback
 );
