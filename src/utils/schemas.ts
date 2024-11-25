@@ -50,6 +50,7 @@ export const newEventSchema = Joi.object({
       "any.required": "Date information is required for the event.",
     }),
   location: Joi.string().trim().optional(),
+  description: Joi.string().trim().optional(),
   category: Joi.string().required().messages({
     "string.base": "Please specify a valid category ID.",
     "any.required": "Event category is required.",
@@ -90,6 +91,7 @@ export const updateEventSchema = Joi.object({
       "object.base": "Start date is required; end date is optional.",
     }),
   location: Joi.string().trim().optional(),
+  description: Joi.string().trim().optional(),
   category: Joi.string()
     .regex(/^[a-fA-F0-9]{24}$/)
     .optional()

@@ -8,6 +8,7 @@ export interface IEvent extends Document {
     end?: Date;
   };
   location: string;
+  description: string;
   category: mongoose.Types.ObjectId;
   additionalAttributes?: Record<string, any>;
   sharedWith: mongoose.Types.ObjectId[];
@@ -34,6 +35,10 @@ const EventSchema = new mongoose.Schema(
       },
     },
     location: {
+      type: String,
+      trim: true,
+    },
+    description: {
       type: String,
       trim: true,
     },
