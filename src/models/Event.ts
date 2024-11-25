@@ -7,7 +7,7 @@ export interface IEvent extends Document {
     start: Date;
     end?: Date;
   };
-  location: {
+  location?: {
     venue?: string;
     city?: string;
   };
