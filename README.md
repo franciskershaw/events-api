@@ -20,11 +20,12 @@ This API is designed to manage and organize personal events, with the ability to
 - \_id (string, required): Unique identifier for each event.
 - title (string, required): Title or name of the event.
 - date (object, required): Start and end dates for the event (end date and time are optional).
+- location (object, optional): Venue and city for the event (both fields are optional)
 - category (\_id, required): Reference to the EventCategory model, identifying the type of event.
 - additionalAttributes (object, optional): Holds category-specific fields (e.g., kickOff for sport, birthYear for birthdays).
 - createdBy (\_id, required): Reference to the user who created the event.
 - sharedWith (array of \_ids): List of user IDs with whom the event is shared.
-- extraInfo (string, optional): Additional information or notes for the event.
+- description (string, optional): Additional information or notes for the event.
 
 ### EventCategory
 

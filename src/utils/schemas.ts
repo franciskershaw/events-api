@@ -49,7 +49,10 @@ export const newEventSchema = Joi.object({
     .messages({
       "any.required": "Date information is required for the event.",
     }),
-  location: Joi.string().trim().optional(),
+  location: Joi.object({
+    venue: Joi.string().trim().optional(),
+    city: Joi.string().trim().optional(),
+  }),
   description: Joi.string().trim().optional(),
   category: Joi.string().required().messages({
     "string.base": "Please specify a valid category ID.",
@@ -68,7 +71,6 @@ export const newEventSchema = Joi.object({
     .messages({
       "array.base": "SharedWith must be an array of user IDs.",
     }),
-  extraInfo: Joi.string().optional(),
 });
 
 export const updateEventSchema = Joi.object({
@@ -90,7 +92,10 @@ export const updateEventSchema = Joi.object({
     .messages({
       "object.base": "Start date is required; end date is optional.",
     }),
-  location: Joi.string().trim().optional(),
+  location: Joi.object({
+    venue: Joi.string().trim().optional(),
+    city: Joi.string().trim().optional(),
+  }),
   description: Joi.string().trim().optional(),
   category: Joi.string()
     .regex(/^[a-fA-F0-9]{24}$/)
@@ -109,7 +114,6 @@ export const updateEventSchema = Joi.object({
         })
     )
     .optional(),
-  extraInfo: Joi.string().optional(),
 })
   .min(1)
   .messages({

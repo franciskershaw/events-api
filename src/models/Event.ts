@@ -7,13 +7,15 @@ export interface IEvent extends Document {
     start: Date;
     end?: Date;
   };
-  location: string;
-  description: string;
+  location: {
+    venue?: string;
+    city?: string;
+  };
+  description?: string;
   category: mongoose.Types.ObjectId;
   additionalAttributes?: Record<string, any>;
   sharedWith: mongoose.Types.ObjectId[];
   createdBy: mongoose.Types.ObjectId;
-  extraInfo?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,8 +37,14 @@ const EventSchema = new mongoose.Schema(
       },
     },
     location: {
-      type: String,
-      trim: true,
+      venue: {
+        type: String,
+        trim: true,
+      },
+      city: {
+        type: String,
+        trim: true,
+      },
     },
     description: {
       type: String,
@@ -65,9 +73,6 @@ const EventSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
       default: null,
-    },
-    extraInfo: {
-      type: String,
     },
   },
   { timestamps: true }

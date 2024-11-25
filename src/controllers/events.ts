@@ -1,12 +1,12 @@
-import { Request, Response, NextFunction } from "express";
-import User, { IUser } from "../models/User";
-import validateRequest from "../utils/validate";
-import { newEventSchema, updateEventSchema } from "../utils/schemas";
-import Event from "../models/Event";
-import SharedEvent from "../models/SharedEvent";
-import EventCategory from "../models/EventCategory";
+import { NextFunction, Request, Response } from "express";
 import mongoose from "mongoose";
+import Event from "../models/Event";
+import EventCategory from "../models/EventCategory";
+import SharedEvent from "../models/SharedEvent";
+import User, { IUser } from "../models/User";
 import { BadRequestError, NotFoundError } from "../utils/errors";
+import { newEventSchema, updateEventSchema } from "../utils/schemas";
+import validateRequest from "../utils/validate";
 
 // Create an event and add it to the user's array of events
 export const createEvent = async (
