@@ -108,5 +108,8 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["src"] /* Include the 'src' directory */,
-  "exclude": ["node_modules"] /* Exclude the 'node_modules' directory */
+  "exclude": [
+    "node_modules",
+    "mockData"
+  ] /* Exclude the 'node_modules' directory */
 }

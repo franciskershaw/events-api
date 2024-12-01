@@ -15,6 +15,7 @@ export interface IEvent extends Document {
   category: mongoose.Types.ObjectId;
   additionalAttributes?: Record<string, any>;
   sharedWith: mongoose.Types.ObjectId[];
+  copiedFrom?: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;

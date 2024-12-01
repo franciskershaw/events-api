@@ -32,3 +32,28 @@ This API is designed to manage and organize personal events, with the ability to
 - \_id (string, required): Unique identifier for each category.
 - name (string, required): Name of the category (e.g., sport, music, wedding).
 - faIcon (string, required): Reference to a FontAwesome icon or another icon library to visually represent the category.
+
+## Development Tools
+
+### Mock Data Generator
+
+A utility script is provided to generate mock events for testing and development purposes. This script lives in the `mockData` directory and is not included in production builds.
+
+#### Usage
+
+```bash
+npm run generate-mock-data <userEmail> <upcomingCount> <pastCount>
+```
+
+Parameters:
+- `userId`: MongoDB ObjectId of the user to create events for
+- `upcomingCount` (optional): Number of upcoming events to generate (default: 20)
+- `pastCount` (optional): Number of past events to generate
+
+The script will:
+1. Delete all existing events for the specified user
+2. Generate new mock events with random titles, dates, and locations
+3. Associate events with random categories from the database
+4. Create both upcoming and past events if specified
+
+Note: You'll need to have at least one event category in the database before running this script.
