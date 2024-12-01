@@ -1,10 +1,10 @@
-import mongoose from "mongoose";
-import dotenv from "dotenv";
 import { faker } from "@faker-js/faker";
 import dayjs from "dayjs";
-import User from "../src/models/User";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
 import Event, { IEvent } from "../src/models/Event";
 import EventCategory from "../src/models/EventCategory";
+import User from "../src/models/User";
 
 dotenv.config();
 
@@ -91,11 +91,14 @@ const generateMockEvents = async (
         const mockEvent: Partial<IEvent> = {
           title: faker.lorem.words({ min: 2, max: 5 }),
           date: { start, end },
-          location: faker.location.city(),
+          location: {
+            venue: faker.lorem.words({ min: 2, max: 5 }),
+            city: faker.location.city(),
+          },
           category:
             categories[Math.floor(Math.random() * categories.length)]._id,
           createdBy: user._id,
-          extraInfo: faker.lorem.paragraph(),
+          description: faker.lorem.paragraph(),
           sharedWith: [],
         };
 
@@ -115,10 +118,13 @@ const generateMockEvents = async (
       const mockEvent: Partial<IEvent> = {
         title: faker.lorem.words({ min: 2, max: 5 }),
         date: { start, end },
-        location: faker.location.city(),
+        location: {
+          venue: faker.lorem.words({ min: 2, max: 5 }),
+          city: faker.location.city(),
+        },
         category: categories[Math.floor(Math.random() * categories.length)]._id,
         createdBy: user._id,
-        extraInfo: faker.lorem.paragraph(),
+        description: faker.lorem.paragraph(),
         sharedWith: [],
       };
 
