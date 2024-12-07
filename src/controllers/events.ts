@@ -113,7 +113,7 @@ export const getUserEvents = async (
 ) => {
   try {
     const userId = (req.user as any)._id;
-    const now = new Date();
+    const now = dayjs().startOf("day").toDate();
 
     const createdEvents = await Event.find({
       $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
