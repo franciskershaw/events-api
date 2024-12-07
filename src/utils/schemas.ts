@@ -50,10 +50,10 @@ export const newEventSchema = Joi.object({
       "any.required": "Date information is required for the event.",
     }),
   location: Joi.object({
-    venue: Joi.string().trim().optional(),
-    city: Joi.string().trim().optional(),
+    venue: Joi.string().trim().allow('').optional(),
+    city: Joi.string().trim().allow('').optional(),
   }),
-  description: Joi.string().trim().optional(),
+  description: Joi.string().trim().allow('').optional(),
   category: Joi.string().required().messages({
     "string.base": "Please specify a valid category ID.",
     "any.required": "Event category is required.",
