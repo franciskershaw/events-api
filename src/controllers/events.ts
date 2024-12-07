@@ -7,6 +7,7 @@ import User, { IUser } from "../models/User";
 import { BadRequestError, NotFoundError } from "../utils/errors";
 import { newEventSchema, updateEventSchema } from "../utils/schemas";
 import validateRequest from "../utils/validate";
+import dayjs from "dayjs";
 
 // Create an event and add it to the user's array of events
 export const createEvent = async (
@@ -112,16 +113,15 @@ export const getUserEvents = async (
 ) => {
   try {
     const userId = (req.user as any)._id;
+    const now = new Date();
 
     const createdEvents = await Event.find({
-      $or: [
-        { "date.end": { $gte: new Date() } },
-        { "date.start": { $gte: new Date() } },
-      ],
+      $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
       createdBy: userId,
     })
       .populate("category", "name icon")
       .populate("createdBy", "name")
+      .sort({ "date.start": 1 })
       .lean();
 
     const sharedEventLinks = await SharedEvent.find({ user: userId })
@@ -132,10 +132,10 @@ export const getUserEvents = async (
           { path: "createdBy", select: "name" },
         ],
         match: {
-          $or: [
-            { "date.end": { $gte: new Date() } },
-            { "date.start": { $gte: new Date() } },
-          ],
+          $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
+        },
+        options: {
+          sort: { "date.start": 1 },
         },
       })
       .lean();
@@ -144,7 +144,9 @@ export const getUserEvents = async (
       .map((link: any) => link.event)
       .filter(Boolean);
 
-    const allEvents = [...createdEvents, ...sharedEvents];
+    const allEvents = [...createdEvents, ...sharedEvents].sort((a, b) =>
+      dayjs(a.date.start).diff(dayjs(b.date.start))
+    );
 
     res.status(200).json(allEvents);
   } catch (err) {
