@@ -110,6 +110,7 @@
   "include": ["src"] /* Include the 'src' directory */,
   "exclude": [
     "node_modules",
+    "dist",
     "mockData"
   ] /* Exclude the 'node_modules' directory */
 }
