@@ -24,7 +24,9 @@ export const authenticateToken = (
     const decoded = verifyAccessToken(token);
 
     if (!decoded) {
-      return next(new ForbiddenError("Invalid or expired token"));
+      return next(
+        new UnauthorizedError("Please log in to proceed", "UNAUTHORIZED")
+      );
     }
 
     req.user = decoded;
