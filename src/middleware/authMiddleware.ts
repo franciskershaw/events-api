@@ -24,7 +24,10 @@ export const authenticateToken = (
 
   if (!decoded) {
     return next(
-      new UnauthorizedError("Please log in to proceed", "INVALID_TOKEN")
+      new UnauthorizedError(
+        "Invalid or expired access token",
+        "INVALID_ACCESS_TOKEN"
+      )
     );
   }
 
@@ -49,20 +52,20 @@ export const refreshTokens = (
     );
   }
 
-  const decoded = verifyRefreshToken(refreshToken) as IUser | undefined;
+  const decoded = verifyRefreshToken(refreshToken);
 
   if (!decoded) {
     res.clearCookie("refreshToken");
     return next(new ForbiddenError("Invalid or expired refresh token"));
   }
 
-  const newAccessToken = generateAccessToken(decoded);
-  const newRefreshToken = generateRefreshToken(decoded);
+  const newAccessToken = generateAccessToken(decoded as IUser);
+  const newRefreshToken = generateRefreshToken(decoded as IUser);
 
   res.cookie("refreshToken", newRefreshToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
   });
 
-  res.json({ accessToken: newAccessToken });
+  res.status(200).json({ accessToken: newAccessToken });
 };
