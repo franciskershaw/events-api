@@ -13,42 +13,24 @@ export const authenticateToken = (
   _: Response,
   next: NextFunction
 ) => {
-  try {
-    const authHeader = req.headers["authorization"];
-    const token = authHeader && authHeader.split(" ")[1];
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
 
-    if (!token) {
-      return next(new UnauthorizedError("No token provided", "TOKEN_MISSING"));
-    }
-
-    const decoded = verifyAccessToken(token);
-
-    if (!decoded) {
-      return next(
-        new UnauthorizedError("Please log in to proceed", "UNAUTHORIZED")
-      );
-    }
-
-    req.user = decoded;
-
-    next();
-  } catch (err) {
-    if (err instanceof Error) {
-      if (err.name === "TokenExpiredError") {
-        throw new UnauthorizedError(
-          "Session expired, please log in again",
-          "SESSION_EXPIRED"
-        );
-      } else if (err.name === "JsonWebTokenError") {
-        throw new UnauthorizedError(
-          "Invalid token, please log in again",
-          "INVALID_TOKEN"
-        );
-      }
-    }
-
-    next(err);
+  if (!token) {
+    return next(new UnauthorizedError("No token provided", "TOKEN_MISSING"));
   }
+
+  const decoded = verifyAccessToken(token);
+
+  if (!decoded) {
+    return next(
+      new UnauthorizedError("Please log in to proceed", "INVALID_TOKEN")
+    );
+  }
+
+  req.user = decoded;
+
+  next();
 };
 
 export const refreshTokens = (

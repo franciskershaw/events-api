@@ -11,6 +11,7 @@ import userRoutes from "./routes/users";
 import eventRoutes from "./routes/events";
 import "colors";
 import connectDb from "./config/db";
+import { errorHandler } from "./middleware/errorMiddleware";
 
 // Declare port to run server on
 const PORT = process.env.PORT || 5500;
@@ -54,6 +55,9 @@ app.use("/api/events", eventRoutes);
 app.get("/", (req, res) => {
   res.send("Hello, TypeScript with Express!");
 });
+
+// Error handler
+app.use(errorHandler);
 
 // Connect to DB and start the server
 connectDb()
