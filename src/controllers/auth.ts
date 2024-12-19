@@ -18,7 +18,7 @@ const sendTokens = (res: Response, user: IUser, status: number = 200) => {
     maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
   });
 
-  res.status(status).json({ user, accessToken });
+  res.status(status).json({ ...user.toObject(), accessToken });
 };
 
 export const generateConnectionId = async (length = 8): Promise<string> => {
