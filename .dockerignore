@@ -4,6 +4,7 @@ node_modules
 # Build artifacts and output folders
 dist
 build
+mockData
 
 # Environment files - contain sensitive data and are not needed in the image
 .env
