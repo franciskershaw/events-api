@@ -8,7 +8,7 @@ on:
 # Add environment variables at workflow level
 env:
   DOCKER_IMAGE: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPO_NAME}}
-  DOMAIN: ${{ secrets.DOMAIN }}
+  DOMAIN: api.${{ secrets.DOMAIN }}
 
 jobs:
   # Add a build-and-push job that runs first
@@ -90,9 +90,9 @@ jobs:
             ls -la /home/${{ secrets.DO_USERNAME }}/nginx/
 
             # Check existing configuration
-            if [ -f "/etc/nginx/sites-available/${{ secrets.DOMAIN }}" ]; then
+            if [ -f "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}" ]; then
               echo "Checking existing nginx configuration..."
-              if grep -q "ssl_certificate" "/etc/nginx/sites-available/${{ secrets.DOMAIN }}"; then
+              if grep -q "ssl_certificate" "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}"; then
                 echo "SSL configuration exists, preserving current nginx config"
                 exit 0
               fi
@@ -105,24 +105,23 @@ jobs:
             fi
 
             # Move configuration file
-            sudo mv "/home/${{ secrets.DO_USERNAME }}/nginx/${{ secrets.REPO_NAME }}.conf" "/etc/nginx/sites-available/${{ secrets.DOMAIN }}"
-            sudo ln -sf "/etc/nginx/sites-available/${{ secrets.DOMAIN }}" "/etc/nginx/sites-enabled/"
+            sudo mv "/home/${{ secrets.DO_USERNAME }}/nginx/${{ secrets.REPO_NAME }}.conf" "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}"
+            sudo ln -sf "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}" "/etc/nginx/sites-enabled/"
 
             # Verify nginx configuration
             echo "Testing nginx configuration..."
             sudo nginx -t
 
             # Setup SSL if needed
-            if [ ! -f "/etc/letsencrypt/live/${{secrets.DOMAIN}}/fullchain.pem" ]; then
+            if [ ! -f "/etc/letsencrypt/live/api.${{secrets.DOMAIN}}/fullchain.pem" ]; then
               echo "Setting up SSL certificate..."
               sudo certbot --nginx -d ${{secrets.DOMAIN}} \
-                -d ${{secrets.DOMAIN}} \
+                -d www.${{secrets.DOMAIN}} \
                 --non-interactive \
                 --agree-tos \
                 --email ${{ secrets.CERTBOT_EMAIL }} \
                 --redirect
             fi
-
             echo "Reloading nginx..."
             sudo systemctl reload nginx
 
