@@ -120,7 +120,6 @@ jobs:
                 --agree-tos \
                 --email ${{ secrets.CERTBOT_EMAIL }} \
                 --redirect
-              sudo certbot renew --dry-run
             fi
             echo "Reloading nginx..."
             sudo systemctl reload nginx
