@@ -52,8 +52,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Hello, TypeScript with Express!");
+app.get("/", (_, res) => {
+  res.status(200).json({ message: "Welcome to the Organisey API" });
 });
 
 // Error handler
