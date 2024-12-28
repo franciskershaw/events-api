@@ -115,11 +115,12 @@ jobs:
             # Setup SSL if needed
             if [ ! -f "/etc/letsencrypt/live/api.${{secrets.DOMAIN}}/fullchain.pem" ]; then
               echo "Setting up SSL certificate..."
-              sudo certbot --nginx -d api.${{secrets.DOMAIN}}
-                --non-interactive \
-                --agree-tos \
-                --email ${{ secrets.CERTBOT_EMAIL }} \
-                --redirect
+              sudo certbot --nginx -d api.${{secrets.DOMAIN}} \
+              --nginx-server-root /etc/nginx/ \
+              --non-interactive \
+              --agree-tos \
+              --email ${{ secrets.CERTBOT_EMAIL }} \
+              --redirect
             fi
             echo "Reloading nginx..."
             sudo systemctl reload nginx
