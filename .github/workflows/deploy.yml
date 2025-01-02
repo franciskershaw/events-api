@@ -8,7 +8,7 @@ on:
 # Add environment variables at workflow level
 env:
   DOCKER_IMAGE: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
-  DOMAIN: api.${{ secrets.DOMAIN }}
+  DOMAIN: api.organisey.co.uk # All backend APIs are deployed to api.mydomain.com
 
 jobs:
   # Add a build-and-push job that runs first
