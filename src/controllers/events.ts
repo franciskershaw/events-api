@@ -112,7 +112,7 @@ export const getUserEvents = async (
   next: NextFunction
 ) => {
   try {
-    const userId = (req.user as any)._id;
+    const userId = (req.user as IUser)._id;
     const now = dayjs().startOf("day").toDate();
 
     const createdEvents = await Event.find({
@@ -160,7 +160,7 @@ export const getPastEvents = async (
   next: NextFunction
 ) => {
   try {
-    const userId = (req.user as any)._id;
+    const userId = (req.user as IUser)._id;
 
     const {
       page = 1,
@@ -241,7 +241,7 @@ export const privatiseEvent = async (
   session.startTransaction();
 
   try {
-    const userId = (req.user as any)._id;
+    const userId = (req.user as IUser)._id;
     const { eventId } = req.params;
 
     const event = await Event.findOne({
@@ -338,7 +338,7 @@ export const addSharedEvent = async (
   session.startTransaction();
 
   try {
-    const userId = (req.user as any)._id;
+    const userId = (req.user as IUser)._id;
     const { eventId } = req.params;
 
     const sharedEvent = await SharedEvent.findOne({
