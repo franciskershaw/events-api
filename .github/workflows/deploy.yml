@@ -5,13 +5,14 @@ on:
     branches: [main]
   workflow_dispatch:
 
-# Add environment variables at workflow level
 env:
   DOCKER_IMAGE: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
   DOMAIN: api.organisey.co.uk # All backend APIs are deployed to api.mydomain.com
+  CONTAINER_NAME: ${{ github.event.repository.name }}
+  NGINX_PATH: /etc/nginx/sites-available
+  PORT: 5500
 
 jobs:
-  # Add a build-and-push job that runs first
   build:
     runs-on: ubuntu-latest
     environment:
@@ -34,7 +35,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Tag current production as previous
-        continue-on-error: true # Allow this step to fail on first deployment
+        continue-on-error: true
         run: |
           if docker pull ${{ env.DOCKER_IMAGE }}:latest; then
             echo "Previous version exists, creating backup tag"
@@ -84,7 +85,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
-          source: "nginx/${{ github.event.repository.name }}.conf"
+          source: "nginx/${{ env.CONTAINER_NAME }}.conf"
           target: "/home/${{ secrets.DO_USERNAME }}/nginx/"
           strip_components: 1
           timeout: 30s
@@ -99,38 +100,36 @@ jobs:
           timeout: 2m
           script: |
             echo "Starting nginx configuration..."
-
-            # Debug: Show current directory and contents
-            pwd
-            ls -la /home/${{ secrets.DO_USERNAME }}/nginx/
+            SITE_CONFIG="${{ env.NGINX_PATH }}/${{ env.DOMAIN }}"
 
             # Check existing configuration
-            if [ -f "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}" ]; then
+            if [ -f "$SITE_CONFIG" ]; then
               echo "Checking existing nginx configuration..."
-              if grep -q "ssl_certificate" "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}"; then
+              if grep -q "ssl_certificate" "$SITE_CONFIG"; then
                 echo "SSL configuration exists, preserving current nginx config"
                 exit 0
               fi
             fi
 
             echo "Setting up new nginx config..."
-            if [ ! -f "/home/${{ secrets.DO_USERNAME }}/nginx/${{ github.event.repository.name }}.conf" ]; then
+            NGINX_SOURCE="/home/${{ secrets.DO_USERNAME }}/nginx/${{ env.CONTAINER_NAME }}.conf"
+            if [ ! -f "$NGINX_SOURCE" ]; then
               echo "Error: nginx configuration file not found"
               exit 1
             fi
 
             # Move configuration file
-            sudo mv "/home/${{ secrets.DO_USERNAME }}/nginx/${{ github.event.repository.name }}.conf" "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}"
-            sudo ln -sf "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}" "/etc/nginx/sites-enabled/"
+            sudo mv "$NGINX_SOURCE" "$SITE_CONFIG"
+            sudo ln -sf "$SITE_CONFIG" "/etc/nginx/sites-enabled/"
 
             # Verify nginx configuration
             echo "Testing nginx configuration..."
             sudo nginx -t
 
             # Setup SSL if needed
-            if [ ! -f "/etc/letsencrypt/live/api.${{secrets.DOMAIN}}/fullchain.pem" ]; then
+            if [ ! -f "/etc/letsencrypt/live/${{ env.DOMAIN }}/fullchain.pem" ]; then
               echo "Setting up SSL certificate..."
-              sudo certbot --nginx -d api.${{secrets.DOMAIN}} \
+              sudo certbot --nginx -d ${{ env.DOMAIN }} \
               --nginx-server-root /etc/nginx/ \
               --non-interactive \
               --agree-tos \
@@ -149,27 +148,26 @@ jobs:
           script_stop: true
           timeout: 5m
           script: |
-            # Deploy Docker container
             echo "Deploying Docker container..."
 
             echo "Cleaning up existing containers..."
-            docker stop ${{ github.event.repository.name }} ${{ github.event.repository.name }}-new || true
-            docker rm ${{ github.event.repository.name }} ${{ github.event.repository.name }}-new || true
+            docker stop ${{ env.CONTAINER_NAME }} ${{ env.CONTAINER_NAME }}-new || true
+            docker rm ${{ env.CONTAINER_NAME }} ${{ env.CONTAINER_NAME }}-new || true
 
             echo "Pulling latest image..."
             docker pull ${{ env.DOCKER_IMAGE }}:latest
 
             echo "Starting new container..."
             docker run -d \
-              --name ${{ github.event.repository.name }}-new \
+              --name ${{ env.CONTAINER_NAME }}-new \
               --restart unless-stopped \
-              --health-cmd="curl -f http://localhost:5500 || exit 1" \
+              --health-cmd="curl -f http://localhost:${{ env.PORT }} || exit 1" \
               --health-interval=30s \
               --health-timeout=5s \
               --health-retries=3 \
-              -p 5500:5500 \
+              -p ${{ env.PORT }}:${{ env.PORT }} \
               -e NODE_ENV=production \
-              -e PORT=5500 \
+              -e PORT=${{ env.PORT }} \
               -e MONGO_URI='${{ secrets.MONGO_URI }}' \
               -e CORS_ORIGIN='${{ secrets.CORS_ORIGIN }}' \
               -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
@@ -180,9 +178,9 @@ jobs:
 
             sleep 15
 
-            if ! docker ps | grep -q "${{ github.event.repository.name }}-new"; then
+            if ! docker ps | grep -q "${{ env.CONTAINER_NAME }}-new"; then
               echo "Container failed to start"
-              docker logs ${{ github.event.repository.name }}-new
+              docker logs ${{ env.CONTAINER_NAME }}-new
               exit 1
             fi
 
@@ -197,7 +195,7 @@ jobs:
             HEALTH_CHECK_ATTEMPTS=0
             MAX_ATTEMPTS=10
 
-            until [ $HEALTH_CHECK_ATTEMPTS -eq $MAX_ATTEMPTS ] || curl -sf http://localhost:5500 > /dev/null; do
+            until [ $HEALTH_CHECK_ATTEMPTS -eq $MAX_ATTEMPTS ] || curl -sf http://localhost:${{ env.PORT }} > /dev/null; do
               echo "Attempt $((HEALTH_CHECK_ATTEMPTS + 1))/$MAX_ATTEMPTS"
               HEALTH_CHECK_ATTEMPTS=$((HEALTH_CHECK_ATTEMPTS + 1))
               sleep 3
@@ -205,14 +203,14 @@ jobs:
 
             if [ $HEALTH_CHECK_ATTEMPTS -eq $MAX_ATTEMPTS ]; then
               echo "Health check failed"
-              docker logs ${{ github.event.repository.name }}-new
+              docker logs ${{ env.CONTAINER_NAME }}-new
               exit 1
             fi
 
             echo "Container healthy, finalizing deployment..."
-            docker stop ${{ github.event.repository.name }} || true
-            docker rm ${{ github.event.repository.name }} || true
-            docker rename ${{ github.event.repository.name }}-new ${{ github.event.repository.name }}
+            docker stop ${{ env.CONTAINER_NAME }} || true
+            docker rm ${{ env.CONTAINER_NAME }} || true
+            docker rename ${{ env.CONTAINER_NAME }}-new ${{ env.CONTAINER_NAME }}
 
       - name: Update Job Summary
         if: success()
@@ -220,7 +218,7 @@ jobs:
           echo "### Deployment Complete :rocket:" >> $GITHUB_STEP_SUMMARY
           echo "- Environment: Production" >> $GITHUB_STEP_SUMMARY
           echo "- URL: https://${{ env.DOMAIN }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Container: ${{ github.event.repository.name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Container: ${{ env.CONTAINER_NAME }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Update Job Summary on Failure
         if: failure()
