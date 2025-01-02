@@ -7,7 +7,7 @@ on:
 
 # Add environment variables at workflow level
 env:
-  DOCKER_IMAGE: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ secrets.REPO_NAME}}
+  DOCKER_IMAGE: docker.io/${{ secrets.DOCKER_USERNAME }}/${{ github.event.repository.name }}
   DOMAIN: api.${{ secrets.DOMAIN }}
 
 jobs:
@@ -71,7 +71,7 @@ jobs:
           host: ${{ secrets.DO_HOST }}
           username: ${{ secrets.DO_USERNAME }}
           key: ${{ secrets.DO_SSH_KEY }}
-          source: "nginx/${{ secrets.REPO_NAME }}.conf"
+          source: "nginx/${{ github.event.repository.name }}.conf"
           target: "/home/${{ secrets.DO_USERNAME }}/nginx/"
           strip_components: 1
 
@@ -99,13 +99,13 @@ jobs:
             fi
 
             echo "Setting up new nginx config..."
-            if [ ! -f "/home/${{ secrets.DO_USERNAME }}/nginx/${{ secrets.REPO_NAME }}.conf" ]; then
+            if [ ! -f "/home/${{ secrets.DO_USERNAME }}/nginx/${{ github.event.repository.name }}.conf" ]; then
               echo "Error: nginx configuration file not found"
               exit 1
             fi
 
             # Move configuration file
-            sudo mv "/home/${{ secrets.DO_USERNAME }}/nginx/${{ secrets.REPO_NAME }}.conf" "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}"
+            sudo mv "/home/${{ secrets.DO_USERNAME }}/nginx/${{ github.event.repository.name }}.conf" "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}"
             sudo ln -sf "/etc/nginx/sites-available/api.${{ secrets.DOMAIN }}" "/etc/nginx/sites-enabled/"
 
             # Verify nginx configuration
@@ -137,15 +137,15 @@ jobs:
             echo "Deploying Docker container..."
 
             echo "Cleaning up existing containers..."
-            docker stop ${{ secrets.REPO_NAME }} ${{ secrets.REPO_NAME }}-new || true
-            docker rm ${{ secrets.REPO_NAME }} ${{ secrets.REPO_NAME }}-new || true
+            docker stop ${{ github.event.repository.name }} ${{ github.event.repository.name }}-new || true
+            docker rm ${{ github.event.repository.name }} ${{ github.event.repository.name }}-new || true
 
             echo "Pulling latest image..."
             docker pull ${{ env.DOCKER_IMAGE }}:latest
 
             echo "Starting new container..."
             docker run -d \
-              --name ${{ secrets.REPO_NAME }}-new \
+              --name ${{ github.event.repository.name }}-new \
               --restart unless-stopped \
               --health-cmd="curl -f http://localhost:5500 || exit 1" \
               --health-interval=30s \
@@ -164,9 +164,9 @@ jobs:
 
             sleep 15
 
-            if ! docker ps | grep -q "${{ secrets.REPO_NAME }}-new"; then
+            if ! docker ps | grep -q "${{ github.event.repository.name }}-new"; then
               echo "Container failed to start"
-              docker logs ${{ secrets.REPO_NAME }}-new
+              docker logs ${{ github.event.repository.name }}-new
               exit 1
             fi
 
@@ -189,44 +189,11 @@ jobs:
 
             if [ $HEALTH_CHECK_ATTEMPTS -eq $MAX_ATTEMPTS ]; then
               echo "Health check failed"
-              docker logs ${{ secrets.REPO_NAME }}-new
+              docker logs ${{ github.event.repository.name }}-new
               exit 1
             fi
 
             echo "Container healthy, finalizing deployment..."
-            docker stop ${{ secrets.REPO_NAME }} || true
-            docker rm ${{ secrets.REPO_NAME }} || true
-            docker rename ${{ secrets.REPO_NAME }}-new ${{ secrets.REPO_NAME }}
-
-  # Best practice: Keep the rollback job
-  rollback:
-    needs: [build, deploy]
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Rollback Deploy
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.DO_HOST }}
-          username: ${{ secrets.DO_USERNAME }}
-          key: ${{ secrets.DO_SSH_KEY }}
-          script_stop: true
-          script: |
-            docker pull ${DOCKER_IMAGE}:previous
-            docker stop ${{ secrets.REPO_NAME }} || true
-            docker rm ${{ secrets.REPO_NAME }} || true
-
-            docker run -d \
-              --name ${{ secrets.REPO_NAME }} \
-              --restart unless-stopped \
-              -p ${PORT:-5500}:${PORT:-5500} \
-              -e NODE_ENV=production \
-              -e MONGO_URI='${{ secrets.MONGO_URI }}' \
-              -e CORS_ORIGIN='${{ secrets.CORS_ORIGIN }}' \
-              -e JWT_SECRET='${{ secrets.JWT_SECRET }}' \
-              -e JWT_REFRESH_SECRET='${{ secrets.JWT_REFRESH_SECRET }}' \
-              -e GOOGLE_CLIENT_ID='${{ secrets.GOOGLE_CLIENT_ID }}' \
-              -e GOOGLE_CLIENT_SECRET='${{ secrets.GOOGLE_CLIENT_SECRET }}' \
-              ${DOCKER_IMAGE}:previous
-
-            echo "Rollback completed"
+            docker stop ${{ github.event.repository.name }} || true
+            docker rm ${{ github.event.repository.name }} || true
+            docker rename ${{ github.event.repository.name }}-new ${{ github.event.repository.name }}
