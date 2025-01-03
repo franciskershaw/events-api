@@ -98,7 +98,7 @@ export const getEventCategories = async (
   next: NextFunction
 ) => {
   try {
-    const categories = await EventCategory.find();
+    const categories = await EventCategory.find().sort({ name: 1 });
     res.status(200).json(categories);
   } catch (err) {
     next(err);
