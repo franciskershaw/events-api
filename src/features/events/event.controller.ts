@@ -1,10 +1,10 @@
 import { NextFunction, Request, Response } from "express";
 
-import Event from "../models/Event";
-import EventCategory from "../models/EventCategory";
-import { IUser } from "../models/User";
-import { newEventSchema, updateEventSchema } from "../utils/schemas";
-import validateRequest from "../utils/validate";
+import Event from "./event.model";
+import EventCategory from "./category/category.model";
+import { IUser } from "../auth/auth.model";
+import { createEventSchema, updateEventSchema } from "./event.validation";
+import validateRequest from "../../core/utils/validate";
 import dayjs from "dayjs";
 
 // Create an event and add it to the user's array of events
@@ -16,7 +16,7 @@ export const createEvent = async (
   try {
     const userId = (req.user as IUser)._id;
 
-    const eventData = validateRequest(req.body, newEventSchema);
+    const eventData = validateRequest(req.body, createEventSchema);
     eventData.createdBy = userId;
 
     if (!eventData.date.end) {

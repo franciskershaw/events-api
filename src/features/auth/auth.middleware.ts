@@ -4,9 +4,9 @@ import {
   verifyRefreshToken,
   generateAccessToken,
   generateRefreshToken,
-} from "../utils/jwt";
-import { UnauthorizedError, ForbiddenError } from "../utils/errors";
-import { IUser } from "../models/User";
+} from "../../core/utils/jwt";
+import { UnauthorizedError, ForbiddenError } from "../../core/utils/errors";
+import { IUser } from "./auth.model";
 
 export const authenticateToken = (
   req: Request,

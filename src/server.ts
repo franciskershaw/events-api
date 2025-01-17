@@ -5,13 +5,13 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import helmet from "helmet";
 import cors from "cors";
-import passport from "./config/passport";
-import authRoutes from "./routes/auth";
-import userRoutes from "./routes/users";
-import eventRoutes from "./routes/events";
+import passport from "./core/config/passport";
+import authRoutes from "./features/auth/auth.routes";
+import userRoutes from "./features/users/user.routes";
+import eventRoutes from "./features/events/event.routes";
 import "colors";
-import connectDb from "./config/db";
-import { errorHandler } from "./middleware/errorMiddleware";
+import connectDb from "./core/config/database";
+import { errorHandler } from "./core/middleware/error.middleware";
 
 // Declare port to run server on
 const PORT = process.env.PORT || 5500;

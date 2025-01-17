@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
-import User, { IUser } from "../models/User";
-import { generateAccessToken } from "../utils/jwt";
-import { NotFoundError } from "../utils/errors";
+import User, { IUser } from "../auth/auth.model";
+import { generateAccessToken } from "../../core/utils/jwt";
+import { NotFoundError } from "../../core/utils/errors";
 
 export const getUserInfo = async (
   req: Request,

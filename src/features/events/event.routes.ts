@@ -7,8 +7,8 @@ import {
   getEventCategories,
   getUserEvents,
   getPastEvents,
-} from "../controllers/events";
-import { authenticateToken } from "../middleware/authMiddleware";
+} from "./event.controller";
+import { authenticateToken } from "../auth/auth.middleware";
 
 const router = express.Router();
 

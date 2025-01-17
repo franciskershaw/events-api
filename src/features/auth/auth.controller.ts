@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
-import { generateAccessToken, generateRefreshToken } from "../utils/jwt";
-import User, { IUser } from "../models/User";
-import { registerSchema } from "../utils/schemas";
-import validateRequest from "../utils/validate";
-import { ConflictError, InternalServerError } from "../utils/errors";
+import { generateAccessToken, generateRefreshToken } from "../../core/utils/jwt";
+import User, { IUser } from "./auth.model";
+import { registerSchema } from "./auth.validation";
+import validateRequest from "../../core/utils/validate";
+import { ConflictError, InternalServerError } from "../../core/utils/errors";
 import bcrypt from "bcryptjs";
 
 // Helper function to send tokens

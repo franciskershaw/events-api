@@ -1,8 +1,8 @@
 import express from "express";
 import passport from "passport";
-import { login, googleCallback, logout, register } from "../controllers/auth";
-import { refreshTokens } from "../middleware/authMiddleware";
-import { GOOGLE_PROVIDER } from "../utils/constants";
+import { login, googleCallback, logout, register } from "./auth.controller";
+import { refreshTokens } from "./auth.middleware";
+import { GOOGLE_PROVIDER } from "../../core/utils/constants";
 
 const router = express.Router();
 
