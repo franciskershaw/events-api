@@ -6,7 +6,10 @@ export interface IUser extends Document {
   password?: string;
   name: string;
   role: "user" | "admin";
-  connectionId: string;
+  connectionId: {
+    id: string;
+    expiry: Date;
+  };
   provider: "google" | "local";
   googleId?: string;
   preferences: {
@@ -47,9 +50,13 @@ const UserSchema = new mongoose.Schema(
       default: "user",
     },
     connectionId: {
-      type: String,
-      required: true,
-      unique: true,
+      id: {
+        type: String,
+        unique: true,
+      },
+      expiry: {
+        type: Date,
+      },
     },
     provider: {
       type: String,

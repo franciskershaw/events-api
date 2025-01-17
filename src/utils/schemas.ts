@@ -119,22 +119,3 @@ export const updateEventSchema = Joi.object({
   .messages({
     "object.min": "At least one field must be updated.",
   });
-
-export const connectUserSchema = Joi.object({
-  connectionId: Joi.string().alphanum().length(8).required().messages({
-    "string.alphanum":
-      "Connection ID must contain only alphanumeric characters.",
-    "string.length": "Connection ID must be exactly 8 characters long.",
-    "any.required": "Connection ID is required.",
-  }),
-});
-
-export const removeConnectionSchema = Joi.object({
-  targetUserId: Joi.string()
-    .regex(/^[a-fA-F0-9]{24}$/)
-    .required()
-    .messages({
-      "string.pattern.base": "Target user ID must be a valid ObjectId.",
-      "any.required": "Target user ID is required.",
-    }),
-});

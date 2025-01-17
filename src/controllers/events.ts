@@ -28,16 +28,6 @@ export const createEvent = async (
     const event = new Event(eventData);
     await event.save();
 
-    if (eventData.sharedWith && eventData.sharedWith.length > 0) {
-      const sharedEvents = eventData.sharedWith.map((sharedUserId: string) => ({
-        event: event._id,
-        user: sharedUserId,
-        permissions: "view",
-      }));
-
-      await SharedEvent.insertMany(sharedEvents);
-    }
-
     res.status(200).json(event);
   } catch (err) {
     next(err);

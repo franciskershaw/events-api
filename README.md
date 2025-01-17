@@ -13,7 +13,6 @@ This API is designed to manage and organize personal events, with the ability to
 - role (enum, optional): Field for assigning user roles like admin or user.
 - events (array of \_ids, optional): References to the events created or associated with the user.
 - connections (array of \_ids, optional): List of approved user connections.
-- connectionId (string, required): A uniquely generated code that provides a user-friendly way to connect with others.
 
 ### Event
 
@@ -46,11 +45,13 @@ npm run generate-mock-data <userEmail> <upcomingCount> <pastCount>
 ```
 
 Parameters:
+
 - `userId`: MongoDB ObjectId of the user to create events for
 - `upcomingCount` (optional): Number of upcoming events to generate (default: 20)
 - `pastCount` (optional): Number of past events to generate
 
 The script will:
+
 1. Delete all existing events for the specified user
 2. Generate new mock events with random titles, dates, and locations
 3. Associate events with random categories from the database

@@ -21,22 +21,6 @@ const sendTokens = (res: Response, user: IUser, status: number = 200) => {
   res.status(status).json({ ...user.toObject(), accessToken });
 };
 
-export const generateConnectionId = async (length = 8): Promise<string> => {
-  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-  let connectionId;
-
-  do {
-    // Generate a random alphanumeric ID
-    connectionId = Array.from({ length }, () =>
-      characters.charAt(Math.floor(Math.random() * characters.length))
-    ).join("");
-
-    // Check if this connectionId already exists
-  } while (await User.exists({ connectionId }));
-
-  return connectionId;
-};
-
 // Local login controller
 export const login = (req: Request, res: Response, next: NextFunction) => {
   passport.authenticate("local", (err: any, user: IUser | undefined) => {
@@ -74,14 +58,11 @@ export const register = async (
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const connectionId = await generateConnectionId();
-
     const user = await User.create({
       email,
       name,
       password: hashedPassword,
       provider: "local",
-      connectionId,
     });
 
     if (user) {
