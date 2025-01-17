@@ -14,9 +14,10 @@ export interface IEvent extends Document {
   description?: string;
   category: mongoose.Types.ObjectId;
   additionalAttributes?: Record<string, any>;
-  sharedWith: mongoose.Types.ObjectId[];
   copiedFrom?: mongoose.Types.ObjectId;
   createdBy: mongoose.Types.ObjectId;
+  private: boolean;
+  unConfirmed: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -64,12 +65,14 @@ const EventSchema = new mongoose.Schema(
       ref: "User",
       required: [true, "Event must have a creator"],
     },
-    sharedWith: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
-    ],
+    private: {
+      type: Boolean,
+      default: false,
+    },
+    unConfirmed: {
+      type: Boolean,
+      default: false,
+    },
     copiedFrom: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",

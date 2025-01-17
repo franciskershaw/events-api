@@ -59,18 +59,8 @@ export const newEventSchema = Joi.object({
     "any.required": "Event category is required.",
   }),
   additionalAttributes: Joi.object().optional(),
-  sharedWith: Joi.array()
-    .items(
-      Joi.string()
-        .regex(/^[a-fA-F0-9]{24}$/)
-        .messages({
-          "string.pattern.base": "Each sharedWith ID must be a valid ObjectId.",
-        })
-    )
-    .optional()
-    .messages({
-      "array.base": "SharedWith must be an array of user IDs.",
-    }),
+  private: Joi.boolean().optional(),
+  unConfirmed: Joi.boolean().optional(),
 });
 
 export const updateEventSchema = Joi.object({
@@ -105,15 +95,8 @@ export const updateEventSchema = Joi.object({
       "string.pattern.base": "Category ID must be a valid ObjectId.",
     }),
   additionalAttributes: Joi.object().optional(),
-  sharedWith: Joi.array()
-    .items(
-      Joi.string()
-        .regex(/^[a-fA-F0-9]{24}$/)
-        .messages({
-          "string.pattern.base": "Each sharedWith ID must be a valid ObjectId.",
-        })
-    )
-    .optional(),
+  private: Joi.boolean().optional(),
+  unConfirmed: Joi.boolean().optional(),
 })
   .min(1)
   .messages({

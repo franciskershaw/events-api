@@ -1,10 +1,8 @@
 import { NextFunction, Request, Response } from "express";
-import mongoose from "mongoose";
+
 import Event from "../models/Event";
 import EventCategory from "../models/EventCategory";
-import SharedEvent from "../models/SharedEvent";
-import User, { IUser } from "../models/User";
-import { BadRequestError, NotFoundError } from "../utils/errors";
+import { IUser } from "../models/User";
 import { newEventSchema, updateEventSchema } from "../utils/schemas";
 import validateRequest from "../utils/validate";
 import dayjs from "dayjs";
@@ -105,7 +103,7 @@ export const getUserEvents = async (
     const userId = (req.user as IUser)._id;
     const now = dayjs().startOf("day").toDate();
 
-    const createdEvents = await Event.find({
+    const events = await Event.find({
       $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
       createdBy: userId,
     })
@@ -114,31 +112,7 @@ export const getUserEvents = async (
       .sort({ "date.start": 1 })
       .lean();
 
-    const sharedEventLinks = await SharedEvent.find({ user: userId })
-      .populate({
-        path: "event",
-        populate: [
-          { path: "category", select: "name icon" },
-          { path: "createdBy", select: "name" },
-        ],
-        match: {
-          $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
-        },
-        options: {
-          sort: { "date.start": 1 },
-        },
-      })
-      .lean();
-
-    const sharedEvents = sharedEventLinks
-      .map((link: any) => link.event)
-      .filter(Boolean);
-
-    const allEvents = [...createdEvents, ...sharedEvents].sort((a, b) =>
-      dayjs(a.date.start).diff(dayjs(b.date.start))
-    );
-
-    res.status(200).json(allEvents);
+    res.status(200).json(events);
   } catch (err) {
     next(err);
   }
@@ -185,25 +159,8 @@ export const getPastEvents = async (
       .limit(pageLimit)
       .lean();
 
-    const sharedEventLinks = await SharedEvent.find({ user: userId })
-      .populate({
-        path: "event",
-        populate: [
-          { path: "category", select: "name icon" },
-          { path: "createdBy", select: "name" },
-        ],
-        match: filters,
-      })
-      .lean();
-
-    const sharedEvents = sharedEventLinks
-      .map((link: any) => link.event)
-      .filter(Boolean);
-
-    const allEvents = [...createdEvents, ...sharedEvents];
-
-    const totalEvents = allEvents.length;
-    const paginatedEvents = allEvents.slice(
+    const totalEvents = createdEvents.length;
+    const paginatedEvents = createdEvents.slice(
       (pageNumber - 1) * pageLimit,
       pageNumber * pageLimit
     );
@@ -218,167 +175,6 @@ export const getPastEvents = async (
       },
     });
   } catch (err) {
-    next(err);
-  }
-};
-
-export const privatiseEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const userId = (req.user as IUser)._id;
-    const { eventId } = req.params;
-
-    const event = await Event.findOne({
-      _id: eventId,
-      createdBy: userId,
-    }).session(session);
-    if (!event) {
-      throw new NotFoundError(
-        "Event not found or you do not have permission to modify it."
-      );
-    }
-
-    await SharedEvent.deleteMany({ event: event._id }).session(session);
-
-    if (event.sharedWith) {
-      event.sharedWith = [];
-      await event.save({ session });
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(200).json({ message: "Event made private." });
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    next(err);
-  }
-};
-
-export const shareEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const userId = (req.user as IUser)._id;
-    const { eventId } = req.params;
-
-    const event = await Event.findOne({
-      _id: eventId,
-      createdBy: userId,
-    }).session(session);
-
-    if (!event) {
-      throw new NotFoundError(
-        "Event not found or you do not have permission to share it."
-      );
-    }
-
-    const user = await User.findById(userId)
-      .populate("connections")
-      .session(session);
-    if (!user || !user.connections || user.connections.length === 0) {
-      throw new BadRequestError(
-        "You have no connections to share this event with."
-      );
-    }
-
-    const sharedEvents = user.connections.map((connection) => ({
-      user: connection._id,
-      event: event._id,
-    }));
-
-    await SharedEvent.insertMany(sharedEvents, { session });
-
-    if (event.sharedWith) {
-      event.sharedWith = user.connections.map((connection) => connection._id);
-      await event.save({ session });
-    }
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res
-      .status(200)
-      .json({ message: "Event shared successfully with all connections." });
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
-    next(err);
-  }
-};
-
-export const addSharedEvent = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const userId = (req.user as IUser)._id;
-    const { eventId } = req.params;
-
-    const sharedEvent = await SharedEvent.findOne({
-      event: eventId,
-      user: userId,
-    })
-      .populate("event")
-      .session(session);
-
-    if (!sharedEvent) {
-      throw new NotFoundError("Shared event not found.");
-    }
-
-    const originalEvent = sharedEvent.event;
-    if (!originalEvent || !(originalEvent instanceof mongoose.Document)) {
-      throw new BadRequestError(
-        "The shared event does not contain valid event data."
-      );
-    }
-
-    const originalEventObject = originalEvent.toObject();
-
-    delete originalEventObject._id;
-    delete originalEventObject.createdBy;
-    delete originalEventObject.copiedFrom;
-    delete originalEventObject.createdAt;
-    delete originalEventObject.updatedAt;
-
-    const newEvent = new Event({
-      ...originalEventObject,
-      createdBy: userId,
-      copiedFrom: originalEvent._id,
-    });
-
-    await newEvent.save({ session });
-
-    await SharedEvent.deleteOne({ event: eventId, user: userId }).session(
-      session
-    );
-
-    await session.commitTransaction();
-    session.endSession();
-
-    res.status(201).json({
-      message: "Shared event added to your events successfully.",
-      event: newEvent,
-    });
-  } catch (err) {
-    await session.abortTransaction();
-    session.endSession();
     next(err);
   }
 };

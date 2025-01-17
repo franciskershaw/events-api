@@ -99,7 +99,8 @@ const generateMockEvents = async (
             categories[Math.floor(Math.random() * categories.length)]._id,
           createdBy: user._id,
           description: faker.lorem.paragraph(),
-          sharedWith: [],
+          private: false,
+          unConfirmed: false,
         };
 
         mockEvents.push(mockEvent);
@@ -125,7 +126,8 @@ const generateMockEvents = async (
         category: categories[Math.floor(Math.random() * categories.length)]._id,
         createdBy: user._id,
         description: faker.lorem.paragraph(),
-        sharedWith: [],
+        private: false,
+        unConfirmed: false,
       };
 
       mockEvents.push(mockEvent);
