@@ -7,6 +7,7 @@ import {
   getEventCategories,
   getUserEvents,
   getPastEvents,
+  toggleEventPrivacy,
 } from "./event.controller";
 import { authenticateToken } from "../auth/auth.middleware";
 
@@ -18,6 +19,11 @@ router.get("/past", authenticateToken, asyncHandler(getPastEvents));
 router.post("/", authenticateToken, asyncHandler(createEvent));
 router.put("/:eventId", authenticateToken, asyncHandler(updateEvent));
 router.delete("/:eventId", authenticateToken, asyncHandler(deleteEvent));
+router.patch(
+  "/:eventId/privacy",
+  authenticateToken,
+  asyncHandler(toggleEventPrivacy)
+);
 
 // create event category (for dev use only)
 // router.post("/category", asyncHandler(createEventCategory));

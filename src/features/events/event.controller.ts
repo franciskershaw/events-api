@@ -193,3 +193,35 @@ export const getPastEvents = async (
 //     next(err);
 //   }
 // };
+
+// Toggle event privacy
+export const toggleEventPrivacy = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const eventId = req.params.eventId;
+    const userId = (req.user as IUser)._id;
+
+    const event = await Event.findOne({ _id: eventId, createdBy: userId });
+
+    if (!event) {
+      throw new Error(
+        "Event not found or you don't have permission to modify it"
+      );
+    }
+
+    event.private = !event.private;
+    await event.save();
+
+    res.status(200).json({
+      message: `Event privacy ${
+        event.private ? "enabled" : "disabled"
+      } successfully`,
+      private: event.private,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
