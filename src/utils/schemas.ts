@@ -59,8 +59,8 @@ export const newEventSchema = Joi.object({
     "any.required": "Event category is required.",
   }),
   additionalAttributes: Joi.object().optional(),
-  private: Joi.boolean().optional(),
-  unConfirmed: Joi.boolean().optional(),
+  private: Joi.boolean().optional().default(false),
+  unConfirmed: Joi.boolean().optional().default(false),
 });
 
 export const updateEventSchema = Joi.object({
