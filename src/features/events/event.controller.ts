@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from "express";
 
 import Event from "./event.model";
 import EventCategory from "./category/category.model";
-import { IUser } from "../auth/auth.model";
+import { IUser } from "../users/user.model";
 import { createEventSchema, updateEventSchema } from "./event.validation";
 import validateRequest from "../../core/utils/validate";
 import dayjs from "dayjs";

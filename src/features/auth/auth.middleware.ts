@@ -6,7 +6,7 @@ import {
   generateRefreshToken,
 } from "../../core/utils/jwt";
 import { UnauthorizedError, ForbiddenError } from "../../core/utils/errors";
-import { IUser } from "./auth.model";
+import { IUser } from "../users/user.model";
 import { REFRESH_TOKEN_COOKIE_OPTIONS } from "../../core/utils/constants";
 
 export const authenticateToken = (

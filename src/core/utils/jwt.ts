@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 
-import { IUser } from "../../features/auth/auth.model";
+import { IUser } from "../../features/users/user.model";
 
 // Generate access token
 export const generateAccessToken = (user: IUser): string => {
