@@ -4,7 +4,7 @@ import { authenticateToken } from "../auth/auth.middleware";
 import {
   getUserInfo,
   createTempUserConnectionId,
-  //   createUserConnection
+  createUserConnection,
 } from "./user.controller";
 
 const router = express.Router();
@@ -15,10 +15,10 @@ router.post(
   authenticateToken,
   asyncHandler(createTempUserConnectionId)
 );
-// router.post(
-//   "/connections",
-//   authenticateToken,
-//   asyncHandler(createUserConnection)
-// );
+router.post(
+  "/connections",
+  authenticateToken,
+  asyncHandler(createUserConnection)
+);
 
 export default router;

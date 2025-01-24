@@ -53,3 +53,64 @@ export const createTempUserConnectionId = async (
     next(err);
   }
 };
+
+export const createUserConnection = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { connectionId } = req.body;
+    const currentUserId = (req.user as IUser)._id;
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      throw new NotFoundError("Current user not found");
+    }
+
+    const targetUser = await User.findOne({
+      "connectionId.id": connectionId,
+      "connectionId.expiry": { $gt: new Date() },
+    });
+
+    if (!targetUser) {
+      throw new NotFoundError("Invalid or expired connection ID");
+    }
+
+    if (targetUser._id.equals(currentUser._id)) {
+      throw new Error("Cannot connect with yourself");
+    }
+
+    if (currentUser.connections?.includes(targetUser._id)) {
+      throw new Error("Connection already exists");
+    }
+
+    await Promise.all([
+      User.findByIdAndUpdate(
+        currentUser._id,
+        {
+          $addToSet: { connections: targetUser._id },
+        },
+        { new: true }
+      ),
+      User.findByIdAndUpdate(
+        targetUser._id,
+        {
+          $addToSet: { connections: currentUser._id },
+          $unset: { connectionId: "" },
+        },
+        { new: true }
+      ),
+    ]);
+
+    res.json({
+      message: "Connection successful",
+      connectedUser: {
+        id: targetUser._id,
+        name: targetUser.name,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
