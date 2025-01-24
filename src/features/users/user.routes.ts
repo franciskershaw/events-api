@@ -5,6 +5,7 @@ import {
   getUserInfo,
   createTempUserConnectionId,
   createUserConnection,
+  removeUserConnection,
 } from "./user.controller";
 
 const router = express.Router();
@@ -19,6 +20,11 @@ router.post(
   "/connections",
   authenticateToken,
   asyncHandler(createUserConnection)
+);
+router.delete(
+  "/connections/:connectionUserId",
+  authenticateToken,
+  asyncHandler(removeUserConnection)
 );
 
 export default router;
