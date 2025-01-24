@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-import User, { IUser } from "../auth/auth.model";
+import User, { IUser } from "./user.model";
 import { generateAccessToken } from "../../core/utils/jwt";
 import { NotFoundError } from "../../core/utils/errors";
 

@@ -2,9 +2,9 @@ import { faker } from "@faker-js/faker";
 import dayjs from "dayjs";
 import dotenv from "dotenv";
 import mongoose from "mongoose";
-import Event, { IEvent } from "../src/models/Event";
-import EventCategory from "../src/models/EventCategory";
-import User from "../src/models/User";
+import Event, { IEvent } from "../src/features/events/event.model";
+import EventCategory from "../src/features/events/category/category.model";
+import User from "../src/features/users/user.model";
 
 dotenv.config();
 

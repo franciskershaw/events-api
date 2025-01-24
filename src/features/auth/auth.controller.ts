@@ -4,7 +4,7 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../core/utils/jwt";
-import User, { IUser } from "./auth.model";
+import User, { IUser } from "../users/user.model";
 import { registerSchema } from "./auth.validation";
 import validateRequest from "../../core/utils/validate";
 import { ConflictError, InternalServerError } from "../../core/utils/errors";
