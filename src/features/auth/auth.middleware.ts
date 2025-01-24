@@ -7,6 +7,7 @@ import {
 } from "../../core/utils/jwt";
 import { UnauthorizedError, ForbiddenError } from "../../core/utils/errors";
 import { IUser } from "./auth.model";
+import { REFRESH_TOKEN_COOKIE_OPTIONS } from "../../core/utils/constants";
 
 export const authenticateToken = (
   req: Request,
@@ -62,10 +63,7 @@ export const refreshTokens = (
   const newAccessToken = generateAccessToken(decoded as IUser);
   const newRefreshToken = generateRefreshToken(decoded as IUser);
 
-  res.cookie("refreshToken", newRefreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-  });
+  res.cookie("refreshToken", newRefreshToken, REFRESH_TOKEN_COOKIE_OPTIONS);
 
   res.status(200).json({ accessToken: newAccessToken });
 };

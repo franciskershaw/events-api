@@ -1,22 +1,28 @@
 import { Request, Response, NextFunction } from "express";
 import passport from "passport";
-import { generateAccessToken, generateRefreshToken } from "../../core/utils/jwt";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../../core/utils/jwt";
 import User, { IUser } from "./auth.model";
 import { registerSchema } from "./auth.validation";
 import validateRequest from "../../core/utils/validate";
 import { ConflictError, InternalServerError } from "../../core/utils/errors";
 import bcrypt from "bcryptjs";
-
+import {
+  REFRESH_TOKEN_COOKIE_OPTIONS,
+  REFRESH_TOKEN_COOKIE_NAME,
+} from "../../core/utils/constants";
 // Helper function to send tokens
 const sendTokens = (res: Response, user: IUser, status: number = 200) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
 
-  res.cookie("refreshToken", refreshToken, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
-  });
+  res.cookie(
+    REFRESH_TOKEN_COOKIE_NAME,
+    refreshToken,
+    REFRESH_TOKEN_COOKIE_OPTIONS
+  );
 
   res.status(status).json({ ...user.toObject(), accessToken });
 };
@@ -86,10 +92,11 @@ export const googleCallback = (req: Request, res: Response) => {
 
     const refreshToken = generateRefreshToken(user);
 
-    res.cookie("refreshToken", refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-    });
+    res.cookie(
+      REFRESH_TOKEN_COOKIE_NAME,
+      refreshToken,
+      REFRESH_TOKEN_COOKIE_OPTIONS
+    );
 
     res.redirect(`${process.env.CORS_ORIGIN}`);
   } catch (err) {
