@@ -4,6 +4,7 @@ import { generateAccessToken } from "../../core/utils/jwt";
 import { NotFoundError, BadRequestError } from "../../core/utils/errors";
 import { generateConnectionId } from "./user.helper";
 import dayjs from "dayjs";
+import mongoose from "mongoose";
 
 export const getUserInfo = async (
   req: Request,
@@ -13,7 +14,28 @@ export const getUserInfo = async (
   try {
     const user = req.user as IUser;
 
-    const userInfo = await User.findById(user._id).lean();
+    const [userInfo] = await User.aggregate([
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(user._id),
+        },
+      },
+      {
+        $lookup: {
+          from: "users",
+          localField: "connections",
+          foreignField: "_id",
+          pipeline: [
+            {
+              $project: {
+                name: 1,
+              },
+            },
+          ],
+          as: "connections",
+        },
+      },
+    ]);
 
     if (!userInfo) {
       throw new NotFoundError("User not found");
@@ -104,7 +126,7 @@ export const createUserConnection = async (
     ]);
 
     res.json({
-      id: targetUser._id,
+      _id: targetUser._id,
       name: targetUser.name,
     });
   } catch (err) {
@@ -154,10 +176,6 @@ export const removeUserConnection = async (
 
     res.json({
       message: "Connection removed successfully",
-      removedConnection: {
-        id: connectionUser._id,
-        name: connectionUser.name,
-      },
     });
   } catch (err) {
     next(err);
