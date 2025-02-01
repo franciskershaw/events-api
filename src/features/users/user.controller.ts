@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "./user.model";
 import { generateAccessToken } from "../../core/utils/jwt";
-import { NotFoundError } from "../../core/utils/errors";
+import { NotFoundError, BadRequestError } from "../../core/utils/errors";
 import { generateConnectionId } from "./user.helper";
 import dayjs from "dayjs";
 
@@ -78,11 +78,11 @@ export const createUserConnection = async (
     }
 
     if (targetUser._id.equals(currentUser._id)) {
-      throw new Error("Cannot connect with yourself");
+      throw new BadRequestError("Cannot connect with yourself");
     }
 
     if (currentUser.connections?.includes(targetUser._id)) {
-      throw new Error("Connection already exists");
+      throw new BadRequestError("Connection already exists");
     }
 
     await Promise.all([
@@ -104,11 +104,8 @@ export const createUserConnection = async (
     ]);
 
     res.json({
-      message: "Connection successful",
-      connectedUser: {
-        id: targetUser._id,
-        name: targetUser.name,
-      },
+      id: targetUser._id,
+      name: targetUser.name,
     });
   } catch (err) {
     next(err);
