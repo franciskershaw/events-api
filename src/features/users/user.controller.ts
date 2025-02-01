@@ -48,7 +48,7 @@ export const createTempUserConnectionId = async (
 
     await user.save();
 
-    res.json({ connectionId });
+    res.json(user.connectionId);
   } catch (err) {
     next(err);
   }
