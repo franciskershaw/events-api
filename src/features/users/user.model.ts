@@ -13,8 +13,11 @@ export interface IUser extends Document {
   provider: "google" | "local";
   googleId?: string;
   preferences: {
-    theme?: string;
-    defaultView?: string;
+    connectionPreferences: {
+      [key: string]: {
+        hideEvents: boolean;
+      };
+    };
   };
   connections: mongoose.Types.ObjectId[];
   createdAt: Date;
@@ -64,8 +67,16 @@ const UserSchema = new mongoose.Schema(
       required: true,
     },
     preferences: {
-      theme: { type: String, default: "light" },
-      defaultView: { type: String, default: "upcoming" },
+      connectionPreferences: {
+        type: Map,
+        of: new mongoose.Schema(
+          {
+            hideEvents: { type: Boolean, default: false },
+          },
+          { _id: false }
+        ),
+        default: new Map(),
+      },
     },
     connections: [
       {

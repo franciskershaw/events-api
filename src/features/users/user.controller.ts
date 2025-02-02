@@ -4,6 +4,8 @@ import { generateAccessToken } from "../../core/utils/jwt";
 import { NotFoundError, BadRequestError } from "../../core/utils/errors";
 import { generateConnectionId, getPopulatedUserData } from "./user.helper";
 import dayjs from "dayjs";
+import { updateConnectionPreferencesSchema } from "./user.validation";
+import validateRequest from "../../core/utils/validate";
 
 export const getUserInfo = async (
   req: Request,
@@ -153,6 +155,54 @@ export const removeUserConnection = async (
     res.json({
       _id: connectionUser._id,
       message: "Connection removed successfully",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateConnectionPreferences = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { hideEvents } = validateRequest(
+      req.body,
+      updateConnectionPreferencesSchema
+    );
+    const { connectionId } = req.params;
+    const currentUserId = (req.user as IUser)._id;
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      throw new NotFoundError("User not found");
+    }
+
+    // Check if the connection exists
+    const connectionExists = currentUser.connections.some(
+      (conn) => conn.toString() === connectionId
+    );
+    if (!connectionExists) {
+      throw new BadRequestError("Connection not found");
+    }
+
+    // Update the connection preferences
+    const updatedUser = await User.findByIdAndUpdate(
+      currentUserId,
+      {
+        $set: {
+          [`preferences.connectionPreferences.${connectionId}`]: {
+            hideEvents,
+          },
+        },
+      },
+      { new: true }
+    );
+
+    res.json({
+      message: "Connection preferences updated successfully",
+      preferences: updatedUser?.preferences.connectionPreferences[connectionId],
     });
   } catch (err) {
     next(err);
