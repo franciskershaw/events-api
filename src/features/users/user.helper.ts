@@ -6,6 +6,8 @@ import { NotFoundError } from "../../core/utils/errors";
 export interface PopulatedConnection {
   _id: mongoose.Types.ObjectId;
   name: string;
+  email: string;
+  hideEvents: boolean;
 }
 
 export interface PopulatedUser extends Omit<IUser, "connections"> {
@@ -40,5 +42,16 @@ export const getPopulatedUserData = async (userId: mongoose.Types.ObjectId) => {
     throw new NotFoundError("User not found");
   }
 
-  return user;
+  // Add hideEvents to each connection from preferences
+  const populatedConnections = user.connections.map((connection) => ({
+    ...connection,
+    hideEvents:
+      user.preferences?.connectionPreferences?.[connection._id.toString()]
+        ?.hideEvents || false,
+  }));
+
+  return {
+    ...user,
+    connections: populatedConnections,
+  };
 };
