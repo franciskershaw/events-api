@@ -151,6 +151,7 @@ export const removeUserConnection = async (
     ]);
 
     res.json({
+      _id: connectionUser._id,
       message: "Connection removed successfully",
     });
   } catch (err) {
