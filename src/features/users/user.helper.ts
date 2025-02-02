@@ -1,5 +1,16 @@
 import User from "./user.model";
 import mongoose from "mongoose";
+import { IUser } from "./user.model";
+import { NotFoundError } from "../../core/utils/errors";
+
+export interface PopulatedConnection {
+  _id: mongoose.Types.ObjectId;
+  name: string;
+}
+
+export interface PopulatedUser extends Omit<IUser, "connections"> {
+  connections: PopulatedConnection[];
+}
 
 export const generateConnectionId = async (length = 8): Promise<string> => {
   const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -18,4 +29,16 @@ export const generateConnectionId = async (length = 8): Promise<string> => {
   } while (existingUser !== null);
 
   return connectionId;
+};
+
+export const getPopulatedUserData = async (userId: mongoose.Types.ObjectId) => {
+  const user = await User.findById(userId)
+    .populate("connections", "name email")
+    .lean();
+
+  if (!user) {
+    throw new NotFoundError("User not found");
+  }
+
+  return user;
 };

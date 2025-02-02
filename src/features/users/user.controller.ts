@@ -2,9 +2,8 @@ import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "./user.model";
 import { generateAccessToken } from "../../core/utils/jwt";
 import { NotFoundError, BadRequestError } from "../../core/utils/errors";
-import { generateConnectionId } from "./user.helper";
+import { generateConnectionId, getPopulatedUserData } from "./user.helper";
 import dayjs from "dayjs";
-import mongoose from "mongoose";
 
 export const getUserInfo = async (
   req: Request,
@@ -13,36 +12,13 @@ export const getUserInfo = async (
 ) => {
   try {
     const user = req.user as IUser;
-
-    const [userInfo] = await User.aggregate([
-      {
-        $match: {
-          _id: new mongoose.Types.ObjectId(user._id),
-        },
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "connections",
-          foreignField: "_id",
-          pipeline: [
-            {
-              $project: {
-                name: 1,
-              },
-            },
-          ],
-          as: "connections",
-        },
-      },
-    ]);
+    const userInfo = await getPopulatedUserData(user._id);
 
     if (!userInfo) {
       throw new NotFoundError("User not found");
     }
 
     const accessToken = generateAccessToken(user);
-
     res.json({ ...userInfo, accessToken });
   } catch (err) {
     next(err);
