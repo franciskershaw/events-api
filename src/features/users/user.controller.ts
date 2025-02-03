@@ -188,7 +188,7 @@ export const updateConnectionPreferences = async (
     }
 
     // Update the connection preferences
-    const updatedUser = await User.findByIdAndUpdate(
+    await User.findByIdAndUpdate(
       currentUserId,
       {
         $set: {
