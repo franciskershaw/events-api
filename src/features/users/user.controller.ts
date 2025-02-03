@@ -201,8 +201,10 @@ export const updateConnectionPreferences = async (
     );
 
     res.json({
-      message: "Connection preferences updated successfully",
-      preferences: updatedUser?.preferences.connectionPreferences[connectionId],
+      _id: connectionId,
+      preferences: {
+        hideEvents,
+      },
     });
   } catch (err) {
     next(err);
