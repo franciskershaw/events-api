@@ -3,15 +3,15 @@ import mongoose from "mongoose";
 import { IUser } from "./user.model";
 import { NotFoundError } from "../../core/utils/errors";
 
-export interface PopulatedConnection {
+interface PopulatedUserData {
   _id: mongoose.Types.ObjectId;
   name: string;
   email: string;
-  hideEvents: boolean;
 }
 
-export interface PopulatedUser extends Omit<IUser, "connections"> {
-  connections: PopulatedConnection[];
+interface PopulatedConnection {
+  _id: PopulatedUserData;
+  hideEvents: boolean;
 }
 
 export const generateConnectionId = async (length = 8): Promise<string> => {
@@ -35,23 +35,33 @@ export const generateConnectionId = async (length = 8): Promise<string> => {
 
 export const getPopulatedUserData = async (userId: mongoose.Types.ObjectId) => {
   const user = await User.findById(userId)
-    .populate("connections", "name email")
+    .populate<{ connections: PopulatedConnection[] }>({
+      path: "connections",
+      populate: {
+        path: "_id",
+        model: "User",
+        select: "name email",
+      },
+    })
     .lean();
 
   if (!user) {
     throw new NotFoundError("User not found");
   }
 
-  // Add hideEvents to each connection from preferences
-  const populatedConnections = user.connections.map((connection) => ({
-    ...connection,
-    hideEvents:
-      user.preferences?.connectionPreferences?.[connection._id.toString()]
-        ?.hideEvents || false,
-  }));
+  // Transform the connections array into the desired format
+  const transformedConnections = user.connections.map((connection) => {
+    const populatedUser = connection._id as PopulatedUserData;
+    return {
+      _id: populatedUser._id,
+      name: populatedUser.name,
+      email: populatedUser.email,
+      hideEvents: connection.hideEvents,
+    };
+  });
 
   return {
     ...user,
-    connections: populatedConnections,
+    connections: transformedConnections,
   };
 };

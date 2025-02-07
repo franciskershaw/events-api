@@ -111,7 +111,10 @@ export const getUserEvents = async (
     }
 
     // Create an array of user IDs including the current user and their connections
-    const userIds = [userId, ...currentUser.connections];
+    const userIds = [
+      userId,
+      ...currentUser.connections.map((connection) => connection._id),
+    ];
 
     const events = await Event.find({
       $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],

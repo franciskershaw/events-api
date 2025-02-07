@@ -12,14 +12,10 @@ export interface IUser extends Document {
   };
   provider: "google" | "local";
   googleId?: string;
-  preferences: {
-    connectionPreferences: {
-      [key: string]: {
-        hideEvents: boolean;
-      };
-    };
-  };
-  connections: mongoose.Types.ObjectId[];
+  connections: Array<{
+    _id: mongoose.Types.ObjectId;
+    hideEvents: boolean;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -66,22 +62,17 @@ const UserSchema = new mongoose.Schema(
       enum: ["google", "local"],
       required: true,
     },
-    preferences: {
-      connectionPreferences: {
-        type: Map,
-        of: new mongoose.Schema(
-          {
-            hideEvents: { type: Boolean, default: false },
-          },
-          { _id: false }
-        ),
-        default: new Map(),
-      },
-    },
     connections: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        hideEvents: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
   },
