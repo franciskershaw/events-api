@@ -6,6 +6,7 @@ import { IUser } from "../users/user.model";
 import { createEventSchema, updateEventSchema } from "./event.validation";
 import validateRequest from "../../core/utils/validate";
 import dayjs from "dayjs";
+import User from "../users/user.model";
 
 // Create an event and add it to the user's array of events
 export const createEvent = async (
@@ -103,9 +104,18 @@ export const getUserEvents = async (
     const userId = (req.user as IUser)._id;
     const now = dayjs().startOf("day").toDate();
 
+    // Get the current user with their connections
+    const currentUser = await User.findById(userId).select("connections");
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    // Create an array of user IDs including the current user and their connections
+    const userIds = [userId, ...currentUser.connections];
+
     const events = await Event.find({
       $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
-      createdBy: userId,
+      createdBy: { $in: userIds },
     })
       .populate("category", "name icon")
       .populate("createdBy", "name")
