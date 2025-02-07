@@ -136,8 +136,13 @@ export const getUserEvents = async (
     ];
 
     const events = await Event.find({
-      $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
-      createdBy: { $in: userIds },
+      $and: [
+        {
+          $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
+        },
+        { createdBy: { $in: userIds } },
+        { $or: [{ private: false }, { createdBy: userId }] },
+      ],
     })
       .populate("category", "name icon")
       .populate("createdBy", "name")
