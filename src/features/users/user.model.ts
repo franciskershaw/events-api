@@ -12,11 +12,10 @@ export interface IUser extends Document {
   };
   provider: "google" | "local";
   googleId?: string;
-  preferences: {
-    theme?: string;
-    defaultView?: string;
-  };
-  connections: mongoose.Types.ObjectId[];
+  connections: Array<{
+    _id: mongoose.Types.ObjectId;
+    hideEvents: boolean;
+  }>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,14 +62,17 @@ const UserSchema = new mongoose.Schema(
       enum: ["google", "local"],
       required: true,
     },
-    preferences: {
-      theme: { type: String, default: "light" },
-      defaultView: { type: String, default: "upcoming" },
-    },
     connections: [
       {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
+        _id: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+        hideEvents: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
   },

@@ -6,6 +6,7 @@ import {
   createTempUserConnectionId,
   createUserConnection,
   removeUserConnection,
+  updateConnectionPreferences
 } from "./user.controller";
 
 const router = express.Router();
@@ -25,6 +26,12 @@ router.delete(
   "/connections/:connectionUserId",
   authenticateToken,
   asyncHandler(removeUserConnection)
+);
+
+router.patch(
+  "/connections/:connectionId/preferences",
+  authenticateToken,
+  asyncHandler(updateConnectionPreferences)
 );
 
 export default router;

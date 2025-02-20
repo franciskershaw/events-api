@@ -6,6 +6,8 @@ import { IUser } from "../users/user.model";
 import { createEventSchema, updateEventSchema } from "./event.validation";
 import validateRequest from "../../core/utils/validate";
 import dayjs from "dayjs";
+import User from "../users/user.model";
+import { ForbiddenError, NotFoundError } from "../../core/utils/errors";
 
 // Create an event and add it to the user's array of events
 export const createEvent = async (
@@ -40,19 +42,28 @@ export const updateEvent = async (
 ) => {
   try {
     const eventId = req.params.eventId;
+    const userId = (req.user as IUser)._id;
 
     const value = validateRequest(req.body, updateEventSchema);
 
-    const event = await Event.findByIdAndUpdate(eventId, value, {
+    const event = await Event.findById(eventId);
+
+    if (!event) {
+      throw new NotFoundError("Event not found");
+    }
+
+    if (event.createdBy.toString() !== userId.toString()) {
+      throw new ForbiddenError(
+        "You don't have permission to update this event"
+      );
+    }
+
+    const updatedEvent = await Event.findByIdAndUpdate(eventId, value, {
       new: true,
       omitUndefined: true,
     });
 
-    if (!event) {
-      throw new Error("Event not found");
-    }
-
-    res.status(200).json(event);
+    res.status(200).json(updatedEvent);
   } catch (err) {
     next(err);
   }
@@ -66,12 +77,21 @@ export const deleteEvent = async (
 ) => {
   try {
     const eventId = req.params.eventId;
+    const userId = (req.user as IUser)._id;
 
-    const event = await Event.findByIdAndDelete(eventId);
+    const event = await Event.findById(eventId);
 
     if (!event) {
-      throw new Error("Event not found");
+      throw new NotFoundError("Event not found");
     }
+
+    if (event.createdBy.toString() !== userId.toString()) {
+      throw new ForbiddenError(
+        "You don't have permission to delete this event"
+      );
+    }
+
+    await Event.findByIdAndDelete(eventId);
 
     res.status(200).json({ message: "Event deleted successfully" });
   } catch (err) {
@@ -103,9 +123,26 @@ export const getUserEvents = async (
     const userId = (req.user as IUser)._id;
     const now = dayjs().startOf("day").toDate();
 
+    // Get the current user with their connections
+    const currentUser = await User.findById(userId).select("connections");
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    // Create an array of user IDs including the current user and their connections
+    const userIds = [
+      userId,
+      ...currentUser.connections.map((connection) => connection._id),
+    ];
+
     const events = await Event.find({
-      $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
-      createdBy: userId,
+      $and: [
+        {
+          $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
+        },
+        { createdBy: { $in: userIds } },
+        { $or: [{ private: false }, { createdBy: userId }] },
+      ],
     })
       .populate("category", "name icon")
       .populate("createdBy", "name")
@@ -204,11 +241,15 @@ export const toggleEventPrivacy = async (
     const eventId = req.params.eventId;
     const userId = (req.user as IUser)._id;
 
-    const event = await Event.findOne({ _id: eventId, createdBy: userId });
+    const event = await Event.findById(eventId);
 
     if (!event) {
-      throw new Error(
-        "Event not found or you don't have permission to modify it"
+      throw new NotFoundError("Event not found");
+    }
+
+    if (event.createdBy.toString() !== userId.toString()) {
+      throw new ForbiddenError(
+        "You don't have permission to modify this event"
       );
     }
 

@@ -1,9 +1,11 @@
 import { Request, Response, NextFunction } from "express";
 import User, { IUser } from "./user.model";
 import { generateAccessToken } from "../../core/utils/jwt";
-import { NotFoundError } from "../../core/utils/errors";
-import { generateConnectionId } from "./user.helper";
+import { NotFoundError, BadRequestError } from "../../core/utils/errors";
+import { generateConnectionId, getPopulatedUserData } from "./user.helper";
 import dayjs from "dayjs";
+import { updateConnectionPreferencesSchema } from "./user.validation";
+import validateRequest from "../../core/utils/validate";
 
 export const getUserInfo = async (
   req: Request,
@@ -12,15 +14,13 @@ export const getUserInfo = async (
 ) => {
   try {
     const user = req.user as IUser;
-
-    const userInfo = await User.findById(user._id).lean();
+    const userInfo = await getPopulatedUserData(user._id);
 
     if (!userInfo) {
       throw new NotFoundError("User not found");
     }
 
     const accessToken = generateAccessToken(user);
-
     res.json({ ...userInfo, accessToken });
   } catch (err) {
     next(err);
@@ -48,7 +48,7 @@ export const createTempUserConnectionId = async (
 
     await user.save();
 
-    res.json({ connectionId });
+    res.json(user.connectionId);
   } catch (err) {
     next(err);
   }
@@ -78,25 +78,33 @@ export const createUserConnection = async (
     }
 
     if (targetUser._id.equals(currentUser._id)) {
-      throw new Error("Cannot connect with yourself");
+      throw new BadRequestError("Cannot connect with yourself");
     }
 
-    if (currentUser.connections?.includes(targetUser._id)) {
-      throw new Error("Connection already exists");
+    // Check if connection already exists
+    const connectionExists = currentUser.connections.some((conn) =>
+      conn._id.equals(targetUser._id)
+    );
+    if (connectionExists) {
+      throw new BadRequestError("Connection already exists");
     }
+
+    // Create connection objects for both users
+    const currentUserConnection = { _id: targetUser._id, hideEvents: false };
+    const targetUserConnection = { _id: currentUser._id, hideEvents: false };
 
     await Promise.all([
       User.findByIdAndUpdate(
         currentUser._id,
         {
-          $addToSet: { connections: targetUser._id },
+          $push: { connections: currentUserConnection },
         },
         { new: true }
       ),
       User.findByIdAndUpdate(
         targetUser._id,
         {
-          $addToSet: { connections: currentUser._id },
+          $push: { connections: targetUserConnection },
           $unset: { connectionId: "" },
         },
         { new: true }
@@ -104,11 +112,10 @@ export const createUserConnection = async (
     ]);
 
     res.json({
-      message: "Connection successful",
-      connectedUser: {
-        id: targetUser._id,
-        name: targetUser.name,
-      },
+      _id: targetUser._id,
+      name: targetUser.name,
+      email: targetUser.email,
+      hideEvents: false,
     });
   } catch (err) {
     next(err);
@@ -134,7 +141,10 @@ export const removeUserConnection = async (
       throw new NotFoundError("Current user not found");
     }
 
-    if (!currentUser.connections?.includes(connectionUser._id)) {
+    const connectionExists = currentUser.connections.some((conn) =>
+      conn._id.equals(connectionUser._id)
+    );
+    if (!connectionExists) {
       throw new Error("Connection does not exist");
     }
 
@@ -142,25 +152,70 @@ export const removeUserConnection = async (
       User.findByIdAndUpdate(
         currentUserId,
         {
-          $pull: { connections: connectionUser._id },
+          $pull: { connections: { _id: connectionUser._id } },
         },
         { new: true }
       ),
       User.findByIdAndUpdate(
         connectionUser._id,
         {
-          $pull: { connections: currentUserId },
+          $pull: { connections: { _id: currentUserId } },
         },
         { new: true }
       ),
     ]);
 
     res.json({
+      _id: connectionUser._id,
       message: "Connection removed successfully",
-      removedConnection: {
-        id: connectionUser._id,
-        name: connectionUser.name,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const updateConnectionPreferences = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { hideEvents } = validateRequest(
+      req.body,
+      updateConnectionPreferencesSchema
+    );
+    const { connectionId } = req.params;
+    const currentUserId = (req.user as IUser)._id;
+
+    const currentUser = await User.findById(currentUserId);
+    if (!currentUser) {
+      throw new NotFoundError("User not found");
+    }
+
+    // Check if the connection exists
+    const connectionExists = currentUser.connections.some(
+      (conn) => conn._id.toString() === connectionId
+    );
+    if (!connectionExists) {
+      throw new BadRequestError("Connection not found");
+    }
+
+    // Update the connection preferences using array filters
+    const updatedUser = await User.findOneAndUpdate(
+      { _id: currentUserId, "connections._id": connectionId },
+      {
+        $set: { "connections.$.hideEvents": hideEvents },
       },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      throw new Error("Failed to update connection preferences");
+    }
+
+    res.json({
+      _id: connectionId,
+      hideEvents,
     });
   } catch (err) {
     next(err);

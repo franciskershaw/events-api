@@ -13,10 +13,13 @@ import {
   REFRESH_TOKEN_COOKIE_OPTIONS,
   REFRESH_TOKEN_COOKIE_NAME,
 } from "../../core/utils/constants";
+import { getPopulatedUserData } from "../users/user.helper";
+
 // Helper function to send tokens
-const sendTokens = (res: Response, user: IUser, status: number = 200) => {
+const sendTokens = async (res: Response, user: IUser, status: number = 200) => {
   const accessToken = generateAccessToken(user);
   const refreshToken = generateRefreshToken(user);
+  const populatedUser = await getPopulatedUserData(user._id);
 
   res.cookie(
     REFRESH_TOKEN_COOKIE_NAME,
@@ -24,7 +27,7 @@ const sendTokens = (res: Response, user: IUser, status: number = 200) => {
     REFRESH_TOKEN_COOKIE_OPTIONS
   );
 
-  res.status(status).json({ ...user.toObject(), accessToken });
+  res.status(status).json({ ...populatedUser, accessToken });
 };
 
 // Local login controller
