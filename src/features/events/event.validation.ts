@@ -27,13 +27,24 @@ export const createEventSchema = Joi.object({
     city: Joi.string().trim().allow("").optional(),
   }),
   description: Joi.string().trim().allow("").optional(),
-  category: Joi.string().required().messages({
-    "string.base": "Please specify a valid category ID.",
-    "any.required": "Event category is required.",
-  }),
+  category: Joi.string()
+    .regex(/^[a-fA-F0-9]{24}$/)
+    .required()
+    .messages({
+      "string.base": "Please specify a valid category ID.",
+      "string.pattern.base": "Category ID must be a valid ObjectId.",
+      "any.required": "Event category is required.",
+    }),
   additionalAttributes: Joi.object().optional(),
   private: Joi.boolean().optional().default(false),
   unConfirmed: Joi.boolean().optional().default(false),
+  copiedFrom: Joi.string()
+    .regex(/^[a-fA-F0-9]{24}$/)
+    .optional()
+    .messages({
+      "string.base": "Please specify a valid event ID.",
+      "string.pattern.base": "Event ID must be a valid ObjectId.",
+    }),
 });
 
 export const updateEventSchema = Joi.object({
