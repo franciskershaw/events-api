@@ -8,7 +8,6 @@ import {
   getUserEvents,
   getPastEvents,
   toggleEventPrivacy,
-  findLinkedEvents,
 } from "./event.controller";
 import { authenticateToken } from "../auth/auth.middleware";
 
@@ -25,10 +24,4 @@ router.patch(
   authenticateToken,
   asyncHandler(toggleEventPrivacy)
 );
-router.get(
-  "/:eventId/linked",
-  authenticateToken,
-  asyncHandler(findLinkedEvents)
-);
-
 export default router;

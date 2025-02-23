@@ -311,22 +311,3 @@ export const toggleEventPrivacy = async (
     next(err);
   }
 };
-
-export const findLinkedEvents = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const eventId = req.params.eventId;
-
-    const linkedEventIds = await Event.find(
-      { copiedFrom: eventId },
-      { _id: 1 }
-    ).distinct("_id");
-
-    res.status(200).json(linkedEventIds);
-  } catch (err) {
-    next(err);
-  }
-};
