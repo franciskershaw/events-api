@@ -3,11 +3,7 @@ import { NextFunction, Request, Response } from "express";
 import Event from "./event.model";
 import EventCategory from "./category/category.model";
 import { IUser } from "../users/user.model";
-import {
-  createEventSchema,
-  updateEventSchema,
-  unlinkEventsSchema,
-} from "./event.validation";
+import { createEventSchema, updateEventSchema } from "./event.validation";
 import validateRequest from "../../core/utils/validate";
 import dayjs from "dayjs";
 import User from "../users/user.model";
@@ -60,6 +56,20 @@ export const updateEvent = async (
       throw new ForbiddenError(
         "You don't have permission to update this event"
       );
+    }
+
+    if (
+      value.date?.start &&
+      !dayjs(value.date.start).isSame(event.date.start, "day")
+    ) {
+      const linkedEventsExist = await Event.exists({ copiedFrom: eventId });
+
+      if (linkedEventsExist) {
+        await Event.updateMany(
+          { copiedFrom: eventId },
+          { $set: { copiedFrom: null } }
+        );
+      }
     }
 
     const updatedEvent = await Event.findByIdAndUpdate(eventId, value, {
@@ -306,29 +316,6 @@ export const findLinkedEvents = async (
     ).distinct("_id");
 
     res.status(200).json(linkedEventIds);
-  } catch (err) {
-    next(err);
-  }
-};
-
-export const unlinkEvents = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    const { eventIds } = validateRequest(req.body, unlinkEventsSchema);
-
-    const result = await Event.updateMany(
-      { _id: { $in: eventIds } },
-      { $set: { copiedFrom: null } }
-    );
-
-    res.status(200).json({
-      success: true,
-      message: `Updated ${result.modifiedCount} events`,
-      modifiedCount: result.modifiedCount,
-    });
   } catch (err) {
     next(err);
   }

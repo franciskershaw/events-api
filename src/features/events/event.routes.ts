@@ -9,7 +9,6 @@ import {
   getPastEvents,
   toggleEventPrivacy,
   findLinkedEvents,
-  unlinkEvents,
 } from "./event.controller";
 import { authenticateToken } from "../auth/auth.middleware";
 

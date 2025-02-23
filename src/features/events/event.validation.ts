@@ -101,23 +101,3 @@ export const updateEventSchema = Joi.object({
   .messages({
     "object.min": "At least one field must be updated.",
   });
-
-// ... existing schemas ...
-
-export const unlinkEventsSchema = Joi.object({
-  eventIds: Joi.array()
-    .items(
-      Joi.string()
-        .regex(/^[a-fA-F0-9]{24}$/)
-        .messages({
-          "string.pattern.base": "All event IDs must be valid ObjectIds.",
-        })
-    )
-    .min(1)
-    .required()
-    .messages({
-      "array.base": "Event IDs must be provided as an array.",
-      "array.min": "At least one event ID must be provided.",
-      "any.required": "Event IDs are required.",
-    }),
-});
