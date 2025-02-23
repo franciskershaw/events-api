@@ -105,6 +105,16 @@ export const deleteEvent = async (
       );
     }
 
+    // Check for and unlink any copied events before deletion
+    const linkedEventsExist = await Event.exists({ copiedFrom: eventId });
+
+    if (linkedEventsExist) {
+      await Event.updateMany(
+        { copiedFrom: eventId },
+        { $set: { copiedFrom: null } }
+      );
+    }
+
     await Event.findByIdAndDelete(eventId);
 
     res.status(200).json({ message: "Event deleted successfully" });
