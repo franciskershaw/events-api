@@ -129,19 +129,39 @@ export const getUserEvents = async (
       throw new Error("User not found");
     }
 
-    // Create an array of user IDs including the current user and their connections
-    const userIds = [
-      userId,
-      ...currentUser.connections.map((connection) => connection._id),
-    ];
-
     const events = await Event.find({
       $and: [
         {
           $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
         },
-        { createdBy: { $in: userIds } },
-        { $or: [{ private: false }, { createdBy: userId }] },
+        {
+          $or: [
+            { createdBy: userId },
+            {
+              $and: [
+                {
+                  createdBy: { $in: currentUser.connections.map((c) => c._id) },
+                },
+                { private: false },
+                {
+                  _id: {
+                    $nin: await Event.find({
+                      createdBy: userId,
+                      copiedFrom: { $exists: true },
+                    }).distinct("copiedFrom"),
+                  },
+                },
+                {
+                  copiedFrom: {
+                    $nin: await Event.find({ createdBy: userId }).distinct(
+                      "_id"
+                    ),
+                  },
+                },
+              ],
+            },
+          ],
+        },
       ],
     })
       .populate("category", "name icon")
