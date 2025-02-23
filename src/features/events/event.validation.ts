@@ -81,6 +81,20 @@ export const updateEventSchema = Joi.object({
   additionalAttributes: Joi.object().optional(),
   private: Joi.boolean().optional(),
   unConfirmed: Joi.boolean().optional(),
+  copiedFrom: Joi.alternatives()
+    .try(
+      Joi.string()
+        .regex(/^[a-fA-F0-9]{24}$/)
+        .messages({
+          "string.base": "Please specify a valid event ID.",
+          "string.pattern.base": "Event ID must be a valid ObjectId.",
+        }),
+      Joi.valid(null)
+    )
+    .optional()
+    .messages({
+      "alternatives.types": "copiedFrom must be either a valid event ID or null"
+    }),
 })
   .min(1)
   .messages({
