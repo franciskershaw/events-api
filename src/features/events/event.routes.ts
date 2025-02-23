@@ -8,6 +8,8 @@ import {
   getUserEvents,
   getPastEvents,
   toggleEventPrivacy,
+  findLinkedEvents,
+  unlinkEvents,
 } from "./event.controller";
 import { authenticateToken } from "../auth/auth.middleware";
 
@@ -24,8 +26,10 @@ router.patch(
   authenticateToken,
   asyncHandler(toggleEventPrivacy)
 );
-
-// create event category (for dev use only)
-// router.post("/category", asyncHandler(createEventCategory));
+router.get(
+  "/:eventId/linked",
+  authenticateToken,
+  asyncHandler(findLinkedEvents)
+);
 
 export default router;

@@ -3,7 +3,11 @@ import { NextFunction, Request, Response } from "express";
 import Event from "./event.model";
 import EventCategory from "./category/category.model";
 import { IUser } from "../users/user.model";
-import { createEventSchema, updateEventSchema } from "./event.validation";
+import {
+  createEventSchema,
+  updateEventSchema,
+  unlinkEventsSchema,
+} from "./event.validation";
 import validateRequest from "../../core/utils/validate";
 import dayjs from "dayjs";
 import User from "../users/user.model";
@@ -252,21 +256,6 @@ export const getPastEvents = async (
   }
 };
 
-// Create event category (For dev use only)
-// export const createEventCategory = async (
-//   req: Request,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     const category = new EventCategory(req.body);
-//     await category.save();
-//     res.status(200).json(category);
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
 // Toggle event privacy
 export const toggleEventPrivacy = async (
   req: Request,
@@ -297,6 +286,48 @@ export const toggleEventPrivacy = async (
         event.private ? "enabled" : "disabled"
       } successfully`,
       private: event.private,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const findLinkedEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const eventId = req.params.eventId;
+
+    const linkedEventIds = await Event.find(
+      { copiedFrom: eventId },
+      { _id: 1 }
+    ).distinct("_id");
+
+    res.status(200).json(linkedEventIds);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const unlinkEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { eventIds } = validateRequest(req.body, unlinkEventsSchema);
+
+    const result = await Event.updateMany(
+      { _id: { $in: eventIds } },
+      { $set: { copiedFrom: null } }
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Updated ${result.modifiedCount} events`,
+      modifiedCount: result.modifiedCount,
     });
   } catch (err) {
     next(err);

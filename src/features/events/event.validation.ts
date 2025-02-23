@@ -93,10 +93,31 @@ export const updateEventSchema = Joi.object({
     )
     .optional()
     .messages({
-      "alternatives.types": "copiedFrom must be either a valid event ID or null"
+      "alternatives.types":
+        "copiedFrom must be either a valid event ID or null",
     }),
 })
   .min(1)
   .messages({
     "object.min": "At least one field must be updated.",
   });
+
+// ... existing schemas ...
+
+export const unlinkEventsSchema = Joi.object({
+  eventIds: Joi.array()
+    .items(
+      Joi.string()
+        .regex(/^[a-fA-F0-9]{24}$/)
+        .messages({
+          "string.pattern.base": "All event IDs must be valid ObjectIds.",
+        })
+    )
+    .min(1)
+    .required()
+    .messages({
+      "array.base": "Event IDs must be provided as an array.",
+      "array.min": "At least one event ID must be provided.",
+      "any.required": "Event IDs are required.",
+    }),
+});
