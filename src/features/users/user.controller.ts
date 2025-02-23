@@ -145,7 +145,7 @@ export const removeUserConnection = async (
       conn._id.equals(connectionUser._id)
     );
     if (!connectionExists) {
-      throw new Error("Connection does not exist");
+      throw new NotFoundError("Connection does not exist");
     }
 
     await Promise.all([

@@ -126,7 +126,7 @@ export const getUserEvents = async (
     // Get the current user with their connections
     const currentUser = await User.findById(userId).select("connections");
     if (!currentUser) {
-      throw new Error("User not found");
+      throw new NotFoundError("User not found");
     }
 
     // If user has no connections, use a simpler query
