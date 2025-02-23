@@ -64,6 +64,7 @@ const EventSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: [true, "Event must have a creator"],
+      index: true,
     },
     private: {
       type: Boolean,
@@ -77,10 +78,13 @@ const EventSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Event",
       default: null,
+      index: true,
     },
   },
   { timestamps: true }
 );
+
+EventSchema.index({ "date.start": 1, "date.end": 1 });
 
 const Event: Model<IEvent> = mongoose.model<IEvent>("Event", EventSchema);
 export default Event;

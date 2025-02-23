@@ -129,6 +129,31 @@ export const getUserEvents = async (
       throw new Error("User not found");
     }
 
+    // If user has no connections, use a simpler query
+    if (!currentUser.connections?.length) {
+      const events = await Event.find({
+        createdBy: userId,
+        $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
+      })
+        .populate("category", "name icon")
+        .populate("createdBy", "name")
+        .sort({ "date.start": 1 })
+        .lean();
+
+      res.status(200).json(events);
+      return;
+    }
+
+    // Get both sets of IDs to exclude in a single aggregation
+    const [eventsICopied, myEvents] = await Promise.all([
+      Event.find(
+        { createdBy: userId, copiedFrom: { $exists: true } },
+        { copiedFrom: 1 }
+      ).distinct("copiedFrom"),
+      Event.find({ createdBy: userId }, { _id: 1 }).distinct("_id"),
+    ]);
+
+    // Main query using the excluded IDs
     const events = await Event.find({
       $and: [
         {
@@ -136,28 +161,19 @@ export const getUserEvents = async (
         },
         {
           $or: [
+            // User's own events
             { createdBy: userId },
+            // Connection's events with filtering
             {
               $and: [
                 {
                   createdBy: { $in: currentUser.connections.map((c) => c._id) },
                 },
                 { private: false },
-                {
-                  _id: {
-                    $nin: await Event.find({
-                      createdBy: userId,
-                      copiedFrom: { $exists: true },
-                    }).distinct("copiedFrom"),
-                  },
-                },
-                {
-                  copiedFrom: {
-                    $nin: await Event.find({ createdBy: userId }).distinct(
-                      "_id"
-                    ),
-                  },
-                },
+                // Not events I've copied (I'll see my copy instead)
+                { _id: { $nin: eventsICopied } },
+                // Not copies of my events
+                { copiedFrom: { $nin: myEvents } },
               ],
             },
           ],
