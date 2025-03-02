@@ -1,9 +1,11 @@
 import Joi from "joi";
 
 export const createEventSchema = Joi.object({
-  title: Joi.string().trim().required().messages({
+  title: Joi.string().trim().min(3).max(100).required().messages({
     "string.empty": "Please add a title for the event.",
     "any.required": "Event title is required.",
+    "string.min": "Event title must be at least 3 characters long.",
+    "string.max": "Event title cannot exceed 100 characters.",
   }),
   date: Joi.object({
     start: Joi.date().required().messages({
@@ -23,10 +25,16 @@ export const createEventSchema = Joi.object({
       "any.required": "Date information is required for the event.",
     }),
   location: Joi.object({
-    venue: Joi.string().trim().allow("").optional(),
-    city: Joi.string().trim().allow("").optional(),
+    venue: Joi.string().trim().allow("").max(150).optional().messages({
+      "string.max": "Venue name cannot exceed 150 characters.",
+    }),
+    city: Joi.string().trim().allow("").max(50).optional().messages({
+      "string.max": "City name cannot exceed 50 characters.",
+    }),
   }),
-  description: Joi.string().trim().allow("").optional(),
+  description: Joi.string().trim().allow("").max(2000).optional().messages({
+    "string.max": "Description cannot exceed 2000 characters.",
+  }),
   category: Joi.string()
     .regex(/^[a-fA-F0-9]{24}$/)
     .required()
@@ -48,7 +56,10 @@ export const createEventSchema = Joi.object({
 });
 
 export const updateEventSchema = Joi.object({
-  title: Joi.string().trim().optional(),
+  title: Joi.string().trim().min(3).max(100).optional().messages({
+    "string.min": "Event title must be at least 3 characters long.",
+    "string.max": "Event title cannot exceed 100 characters.",
+  }),
   date: Joi.object({
     start: Joi.date().required().messages({
       "date.base": "Please add a valid start date for the event.",
@@ -67,10 +78,16 @@ export const updateEventSchema = Joi.object({
       "object.base": "Start date is required; end date is optional.",
     }),
   location: Joi.object({
-    venue: Joi.string().trim().allow("").optional(),
-    city: Joi.string().trim().allow("").optional(),
+    venue: Joi.string().trim().allow("").max(150).optional().messages({
+      "string.max": "Venue name cannot exceed 150 characters.",
+    }),
+    city: Joi.string().trim().allow("").max(50).optional().messages({
+      "string.max": "City name cannot exceed 50 characters.",
+    }),
   }),
-  description: Joi.string().trim().allow("").optional(),
+  description: Joi.string().trim().allow("").max(2000).optional().messages({
+    "string.max": "Description cannot exceed 2000 characters.",
+  }),
   category: Joi.string()
     .regex(/^[a-fA-F0-9]{24}$/)
     .optional()
