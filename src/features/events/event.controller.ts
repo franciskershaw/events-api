@@ -1,13 +1,12 @@
 import { NextFunction, Request, Response } from "express";
 
-import Event from "./event.model";
-import EventCategory from "./category/category.model";
-import { IUser } from "../users/user.model";
-import { createEventSchema, updateEventSchema } from "./event.validation";
-import validateRequest from "../../core/utils/validate";
 import dayjs from "dayjs";
-import User from "../users/user.model";
 import { ForbiddenError, NotFoundError } from "../../core/utils/errors";
+import validateRequest from "../../core/utils/validate";
+import User, { IUser } from "../users/user.model";
+import EventCategory from "./category/category.model";
+import Event from "./event.model";
+import { createEventSchema, updateEventSchema } from "./event.validation";
 
 // Create an event and add it to the user's array of events
 export const createEvent = async (
@@ -271,6 +270,85 @@ export const getPastEvents = async (
         limit: pageLimit,
       },
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+// Get past month of events
+export const getPastMonthEvents = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const userId = (req.user as IUser)._id;
+    const now = dayjs().startOf("day").toDate(); // Current date at start of day
+    const startOfMonth = dayjs().startOf("month").toDate(); // Start of the current month
+
+    // Get the current user with their connections
+    const currentUser = await User.findById(userId).select("connections");
+    if (!currentUser) {
+      throw new NotFoundError("User not found");
+    }
+
+    // If user has no connections, use a simpler query
+    if (!currentUser.connections?.length) {
+      const events = await Event.find({
+        createdBy: userId,
+        "date.end": { $lt: now, $gte: startOfMonth }, // Past events within the current month
+      })
+        .populate("category", "name icon")
+        .populate("createdBy", "name")
+        .sort({ "date.start": 1 })
+        .lean();
+
+      res.status(200).json(events);
+      return;
+    }
+
+    // Get both sets of IDs to exclude in a single aggregation
+    const [eventsICopied, myEvents] = await Promise.all([
+      Event.find(
+        { createdBy: userId, copiedFrom: { $exists: true } },
+        { copiedFrom: 1 }
+      ).distinct("copiedFrom"),
+      Event.find({ createdBy: userId }, { _id: 1 }).distinct("_id"),
+    ]);
+
+    // Main query using the excluded IDs
+    const events = await Event.find({
+      $and: [
+        {
+          "date.end": { $lt: now, $gte: startOfMonth }, // Past events within the current month
+        },
+        {
+          $or: [
+            // User's own events
+            { createdBy: userId },
+            // Connection's events with filtering
+            {
+              $and: [
+                {
+                  createdBy: { $in: currentUser.connections.map((c) => c._id) },
+                },
+                { private: false },
+                // Not events I've copied (I'll see my copy instead)
+                { _id: { $nin: eventsICopied } },
+                // Not copies of my events
+                { copiedFrom: { $nin: myEvents } },
+              ],
+            },
+          ],
+        },
+      ],
+    })
+      .populate("category", "name icon")
+      .populate("createdBy", "name")
+      .sort({ "date.start": 1 })
+      .lean();
+
+    res.status(200).json(events);
   } catch (err) {
     next(err);
   }
