@@ -58,7 +58,7 @@ export const createEventSchema = Joi.object({
     pattern: Joi.object({
       frequency: Joi.string()
         .valid("daily", "weekly", "monthly", "yearly")
-        .default("yearly"),
+        .default("weekly"),
       interval: Joi.number().min(1).default(1).messages({
         "number.base": "Interval must be a number.",
         "number.min": "Interval must be at least 1.",
@@ -66,6 +66,9 @@ export const createEventSchema = Joi.object({
       daysOfWeek: Joi.array()
         .items(Joi.number().min(0).max(6)) // 0 = Sunday, 6 = Saturday
         .default([]),
+      startDate: Joi.date().optional().messages({
+        "date.base": "Start date must be a valid date.",
+      }),
       endDate: Joi.date().optional().messages({
         "date.base": "End date must be a valid date.",
       }),
@@ -151,7 +154,7 @@ export const updateEventSchema = Joi.object({
     pattern: Joi.object({
       frequency: Joi.string()
         .valid("daily", "weekly", "monthly", "yearly")
-        .default("yearly"),
+        .default("weekly"),
       interval: Joi.number().min(1).default(1).messages({
         "number.base": "Interval must be a number.",
         "number.min": "Interval must be at least 1.",
@@ -159,6 +162,9 @@ export const updateEventSchema = Joi.object({
       daysOfWeek: Joi.array()
         .items(Joi.number().min(0).max(6)) // 0 = Sunday, 6 = Saturday
         .default([]),
+      startDate: Joi.date().optional().messages({
+        "date.base": "Start date must be a valid date.",
+      }),
       endDate: Joi.date().optional().messages({
         "date.base": "End date must be a valid date.",
       }),

@@ -26,6 +26,7 @@ export interface IEvent extends Document {
       frequency: "daily" | "weekly" | "monthly" | "yearly";
       interval: number; // every X days/weeks/months/years
       daysOfWeek: [number]; // for weekly recurrence
+      startDate: Date; // when recurrence ends
       endDate: Date; // when recurrence ends
       count: number; // or total occurrences
     };
@@ -99,7 +100,7 @@ const EventSchema = new mongoose.Schema(
         frequency: {
           type: String,
           enum: ["daily", "weekly", "monthly", "yearly"],
-          default: "yearly",
+          default: "weekly",
         },
         interval: {
           type: Number,
@@ -108,6 +109,9 @@ const EventSchema = new mongoose.Schema(
         daysOfWeek: {
           type: [Number],
           default: [],
+        },
+        startDate: {
+          type: Date,
         },
         endDate: {
           type: Date,
