@@ -136,7 +136,7 @@ export const getEventCategories = async (
   }
 };
 
-// Get user's events (upcoming or ongoing)
+// Get user's events (all recurring events, and upcoming or ongoing events)
 export const getUserEvents = async (
   req: Request,
   res: Response,
@@ -156,7 +156,18 @@ export const getUserEvents = async (
     if (!currentUser.connections?.length) {
       const events = await Event.find({
         createdBy: userId,
-        $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
+        $or: [
+          // Include all recurring events
+          { "recurrence.isRecurring": true },
+          // Include non-recurring events from today onwards
+          {
+            "recurrence.isRecurring": { $ne: true },
+            $or: [
+              { "date.end": { $gte: now } },
+              { "date.start": { $gte: now } },
+            ],
+          },
+        ],
       })
         .populate("category", "name icon")
         .populate("createdBy", "name")
@@ -180,7 +191,18 @@ export const getUserEvents = async (
     const events = await Event.find({
       $and: [
         {
-          $or: [{ "date.end": { $gte: now } }, { "date.start": { $gte: now } }],
+          $or: [
+            // Include all recurring events
+            { "recurrence.isRecurring": true },
+            // Include non-recurring events from today onwards
+            {
+              "recurrence.isRecurring": { $ne: true },
+              $or: [
+                { "date.end": { $gte: now } },
+                { "date.start": { $gte: now } },
+              ],
+            },
+          ],
         },
         {
           $or: [
@@ -297,6 +319,7 @@ export const getPastMonthEvents = async (
       const events = await Event.find({
         createdBy: userId,
         "date.end": { $lt: now, $gte: startOfMonth }, // Past events within the current month
+        "recurrence.isRecurring": false,
       })
         .populate("category", "name icon")
         .populate("createdBy", "name")
@@ -321,6 +344,9 @@ export const getPastMonthEvents = async (
       $and: [
         {
           "date.end": { $lt: now, $gte: startOfMonth }, // Past events within the current month
+        },
+        {
+          "recurrence.isRecurring": false, // Only non-recurring events
         },
         {
           $or: [
