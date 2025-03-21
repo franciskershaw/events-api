@@ -69,9 +69,12 @@ export const createEventSchema = Joi.object({
       startDate: Joi.date().optional().messages({
         "date.base": "Start date must be a valid date.",
       }),
-      endDate: Joi.date().optional().messages({
-        "date.base": "End date must be a valid date.",
-      }),
+      endDate: Joi.alternatives()
+        .try(Joi.date(), Joi.valid(null)) // Allow null or a valid date
+        .optional()
+        .messages({
+          "date.base": "End date must be a valid date or null.",
+        }),
       count: Joi.number().min(1).optional().messages({
         "number.base": "Count must be a number.",
         "number.min": "Count must be at least 1.",
@@ -165,9 +168,12 @@ export const updateEventSchema = Joi.object({
       startDate: Joi.date().optional().messages({
         "date.base": "Start date must be a valid date.",
       }),
-      endDate: Joi.date().optional().messages({
-        "date.base": "End date must be a valid date.",
-      }),
+      endDate: Joi.alternatives()
+        .try(Joi.date(), Joi.valid(null)) // Allow null or a valid date
+        .optional()
+        .messages({
+          "date.base": "End date must be a valid date or null.",
+        }),
       count: Joi.number().min(1).optional().messages({
         "number.base": "Count must be a number.",
         "number.min": "Count must be at least 1.",
