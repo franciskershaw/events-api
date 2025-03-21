@@ -63,9 +63,6 @@ export const createEventSchema = Joi.object({
         "number.base": "Interval must be a number.",
         "number.min": "Interval must be at least 1.",
       }),
-      daysOfWeek: Joi.array()
-        .items(Joi.number().min(0).max(6)) // 0 = Sunday, 6 = Saturday
-        .default([]),
       startDate: Joi.date().optional().messages({
         "date.base": "Start date must be a valid date.",
       }),
@@ -75,10 +72,6 @@ export const createEventSchema = Joi.object({
         .messages({
           "date.base": "End date must be a valid date or null.",
         }),
-      count: Joi.number().min(1).optional().messages({
-        "number.base": "Count must be a number.",
-        "number.min": "Count must be at least 1.",
-      }),
     })
       .optional()
       .when("isRecurring", {
@@ -162,9 +155,6 @@ export const updateEventSchema = Joi.object({
         "number.base": "Interval must be a number.",
         "number.min": "Interval must be at least 1.",
       }),
-      daysOfWeek: Joi.array()
-        .items(Joi.number().min(0).max(6)) // 0 = Sunday, 6 = Saturday
-        .default([]),
       startDate: Joi.date().optional().messages({
         "date.base": "Start date must be a valid date.",
       }),
@@ -174,10 +164,6 @@ export const updateEventSchema = Joi.object({
         .messages({
           "date.base": "End date must be a valid date or null.",
         }),
-      count: Joi.number().min(1).optional().messages({
-        "number.base": "Count must be a number.",
-        "number.min": "Count must be at least 1.",
-      }),
     })
       .optional()
       .when("isRecurring", {

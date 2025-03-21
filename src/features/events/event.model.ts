@@ -25,10 +25,8 @@ export interface IEvent extends Document {
     pattern: {
       frequency: "daily" | "weekly" | "monthly" | "yearly";
       interval: number; // every X days/weeks/months/years
-      daysOfWeek: [number]; // for weekly recurrence
       startDate: Date; // when recurrence ends
       endDate: Date; // when recurrence ends
-      count: number; // or total occurrences
     };
   };
 }
