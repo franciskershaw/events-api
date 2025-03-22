@@ -319,7 +319,12 @@ export const getPastMonthEvents = async (
       const events = await Event.find({
         createdBy: userId,
         "date.end": { $lt: now, $gte: startOfMonth }, // Past events within the current month
-        "recurrence.isRecurring": false,
+        $or: [
+          // Include events where recurrence does not exist
+          { recurrence: { $exists: false } },
+          // Include events where recurrence exists and isRecurring is false
+          { "recurrence.isRecurring": false },
+        ],
       })
         .populate("category", "name icon")
         .populate("createdBy", "name")
@@ -346,7 +351,12 @@ export const getPastMonthEvents = async (
           "date.end": { $lt: now, $gte: startOfMonth }, // Past events within the current month
         },
         {
-          "recurrence.isRecurring": false, // Only non-recurring events
+          $or: [
+            // Include events where recurrence does not exist
+            { recurrence: { $exists: false } },
+            // Include events where recurrence exists and isRecurring is false
+            { "recurrence.isRecurring": false },
+          ],
         },
         {
           $or: [
