@@ -53,6 +53,38 @@ export const createEventSchema = Joi.object({
       "string.base": "Please specify a valid event ID.",
       "string.pattern.base": "Event ID must be a valid ObjectId.",
     }),
+  recurrence: Joi.object({
+    isRecurring: Joi.boolean().default(false),
+    pattern: Joi.object({
+      frequency: Joi.string()
+        .valid("daily", "weekly", "monthly", "yearly")
+        .default("weekly"),
+      interval: Joi.number().min(1).default(1).messages({
+        "number.base": "Interval must be a number.",
+        "number.min": "Interval must be at least 1.",
+      }),
+      startDate: Joi.date().optional().messages({
+        "date.base": "Start date must be a valid date.",
+      }),
+      endDate: Joi.alternatives()
+        .try(Joi.date(), Joi.valid(null)) // Allow null or a valid date
+        .optional()
+        .messages({
+          "date.base": "End date must be a valid date or null.",
+        }),
+    })
+      .optional()
+      .when("isRecurring", {
+        is: true,
+        then: Joi.object({
+          frequency: Joi.required(),
+          interval: Joi.required(),
+        }),
+        otherwise: Joi.object().optional(),
+      }),
+  })
+    .optional()
+    .default({ isRecurring: false }),
 });
 
 export const updateEventSchema = Joi.object({
@@ -113,6 +145,38 @@ export const updateEventSchema = Joi.object({
       "alternatives.types":
         "copiedFrom must be either a valid event ID or null",
     }),
+  recurrence: Joi.object({
+    isRecurring: Joi.boolean().default(false),
+    pattern: Joi.object({
+      frequency: Joi.string()
+        .valid("daily", "weekly", "monthly", "yearly")
+        .default("weekly"),
+      interval: Joi.number().min(1).default(1).messages({
+        "number.base": "Interval must be a number.",
+        "number.min": "Interval must be at least 1.",
+      }),
+      startDate: Joi.date().optional().messages({
+        "date.base": "Start date must be a valid date.",
+      }),
+      endDate: Joi.alternatives()
+        .try(Joi.date(), Joi.valid(null)) // Allow null or a valid date
+        .optional()
+        .messages({
+          "date.base": "End date must be a valid date or null.",
+        }),
+    })
+      .optional()
+      .when("isRecurring", {
+        is: true,
+        then: Joi.object({
+          frequency: Joi.required(),
+          interval: Joi.required(),
+        }),
+        otherwise: Joi.object().optional(),
+      }),
+  })
+    .optional()
+    .default({ isRecurring: false }),
 })
   .min(1)
   .messages({

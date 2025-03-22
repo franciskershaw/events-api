@@ -20,6 +20,15 @@ export interface IEvent extends Document {
   unConfirmed: boolean;
   createdAt: Date;
   updatedAt: Date;
+  recurrence: {
+    isRecurring: boolean;
+    pattern: {
+      frequency: "daily" | "weekly" | "monthly" | "yearly";
+      interval: number; // every X days/weeks/months/years
+      startDate: Date; // when recurrence ends
+      endDate: Date; // when recurrence ends
+    };
+  };
 }
 
 const EventSchema = new mongoose.Schema(
@@ -79,6 +88,36 @@ const EventSchema = new mongoose.Schema(
       ref: "Event",
       default: null,
       index: true,
+    },
+    recurrence: {
+      isRecurring: {
+        type: Boolean,
+        default: false,
+      },
+      pattern: {
+        frequency: {
+          type: String,
+          enum: ["daily", "weekly", "monthly", "yearly"],
+          default: "weekly",
+        },
+        interval: {
+          type: Number,
+          default: 1,
+        },
+        daysOfWeek: {
+          type: [Number],
+          default: [],
+        },
+        startDate: {
+          type: Date,
+        },
+        endDate: {
+          type: Date,
+        },
+        count: {
+          type: Number,
+        },
+      },
     },
   },
   { timestamps: true }
