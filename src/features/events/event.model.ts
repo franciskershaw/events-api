@@ -4,8 +4,8 @@ export interface IEvent extends Document {
   _id: mongoose.Types.ObjectId;
   title: string;
   date: {
-    start: Date;
-    end?: Date;
+    start: string;
+    end?: string;
   };
   location?: {
     venue?: string;
@@ -25,8 +25,8 @@ export interface IEvent extends Document {
     pattern: {
       frequency: "daily" | "weekly" | "monthly" | "yearly";
       interval: number; // every X days/weeks/months/years
-      startDate: Date; // when recurrence ends
-      endDate: Date; // when recurrence ends
+      startDate: string; // when recurrence ends
+      endDate: string; // when recurrence ends
     };
   };
 }
@@ -40,11 +40,11 @@ const EventSchema = new mongoose.Schema(
     },
     date: {
       start: {
-        type: Date,
+        type: String,
         required: [true, "Please add a start date for the event"],
       },
       end: {
-        type: Date,
+        type: String,
       },
     },
     location: {
@@ -109,10 +109,10 @@ const EventSchema = new mongoose.Schema(
           default: [],
         },
         startDate: {
-          type: Date,
+          type: String,
         },
         endDate: {
-          type: Date,
+          type: String,
         },
         count: {
           type: Number,
@@ -120,7 +120,11 @@ const EventSchema = new mongoose.Schema(
       },
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    // This is the key setting - don't convert dates on Mongoose's side
+    strict: true,
+  }
 );
 
 EventSchema.index({ "date.start": 1, "date.end": 1 });
