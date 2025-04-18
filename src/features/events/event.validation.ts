@@ -1,5 +1,19 @@
 import Joi from "joi";
 
+const isValidISODateString = (
+  value: string,
+  helpers: Joi.CustomHelpers
+): string | Joi.ErrorReport => {
+  if (!value) return value;
+
+  const date = new Date(value);
+  if (isNaN(date.getTime())) {
+    return helpers.error("string.isoDate");
+  }
+
+  return value;
+};
+
 export const createEventSchema = Joi.object({
   title: Joi.string().trim().min(3).max(100).required().messages({
     "string.empty": "Please add a title for the event.",
@@ -8,16 +22,33 @@ export const createEventSchema = Joi.object({
     "string.max": "Event title cannot exceed 100 characters.",
   }),
   date: Joi.object({
-    start: Joi.date().required().messages({
-      "date.base": "Please add a valid start date for the event.",
+    start: Joi.string().required().custom(isValidISODateString).messages({
+      "string.empty": "Please add a valid start date for the event.",
       "any.required": "Start date is required for the event.",
+      "string.isoDate": "Start date must be a valid ISO date string.",
     }),
-    end: Joi.date()
+    end: Joi.string()
       .optional()
-      .min(Joi.ref("start"))
-      .default(Joi.ref("start"))
+      .custom((value, helpers) => {
+        if (!value) return value;
+
+        const startDate = helpers.state.ancestors[0].start;
+        const endDate = new Date(value);
+        const startDateTime = new Date(startDate);
+
+        if (isNaN(endDate.getTime())) {
+          return helpers.error("string.isoDate");
+        }
+
+        if (endDate < startDateTime) {
+          return helpers.error("string.min");
+        }
+
+        return value;
+      })
       .messages({
-        "date.min": "End date must be the same as or after the start date.",
+        "string.isoDate": "End date must be a valid ISO date string.",
+        "string.min": "End date must be the same as or after the start date.",
       }),
   })
     .required()
@@ -63,14 +94,14 @@ export const createEventSchema = Joi.object({
         "number.base": "Interval must be a number.",
         "number.min": "Interval must be at least 1.",
       }),
-      startDate: Joi.date().optional().messages({
-        "date.base": "Start date must be a valid date.",
+      startDate: Joi.string().optional().custom(isValidISODateString).messages({
+        "string.isoDate": "Start date must be a valid ISO date string.",
       }),
       endDate: Joi.alternatives()
-        .try(Joi.date(), Joi.valid(null)) // Allow null or a valid date
+        .try(Joi.string().custom(isValidISODateString), Joi.valid(null))
         .optional()
         .messages({
-          "date.base": "End date must be a valid date or null.",
+          "string.isoDate": "End date must be a valid ISO date string or null.",
         }),
     })
       .optional()
@@ -93,16 +124,33 @@ export const updateEventSchema = Joi.object({
     "string.max": "Event title cannot exceed 100 characters.",
   }),
   date: Joi.object({
-    start: Joi.date().required().messages({
-      "date.base": "Please add a valid start date for the event.",
+    start: Joi.string().required().custom(isValidISODateString).messages({
+      "string.empty": "Please add a valid start date for the event.",
       "any.required": "Start date is required when updating date.",
+      "string.isoDate": "Start date must be a valid ISO date string.",
     }),
-    end: Joi.date()
+    end: Joi.string()
       .optional()
-      .min(Joi.ref("start"))
-      .default(Joi.ref("start"))
+      .custom((value, helpers) => {
+        if (!value) return value;
+
+        const startDate = helpers.state.ancestors[0].start;
+        const endDate = new Date(value);
+        const startDateTime = new Date(startDate);
+
+        if (isNaN(endDate.getTime())) {
+          return helpers.error("string.isoDate");
+        }
+
+        if (endDate < startDateTime) {
+          return helpers.error("string.min");
+        }
+
+        return value;
+      })
       .messages({
-        "date.min": "End date must be the same as or after the start date.",
+        "string.isoDate": "End date must be a valid ISO date string.",
+        "string.min": "End date must be the same as or after the start date.",
       }),
   })
     .optional()
@@ -155,14 +203,14 @@ export const updateEventSchema = Joi.object({
         "number.base": "Interval must be a number.",
         "number.min": "Interval must be at least 1.",
       }),
-      startDate: Joi.date().optional().messages({
-        "date.base": "Start date must be a valid date.",
+      startDate: Joi.string().optional().custom(isValidISODateString).messages({
+        "string.isoDate": "Start date must be a valid ISO date string.",
       }),
       endDate: Joi.alternatives()
-        .try(Joi.date(), Joi.valid(null)) // Allow null or a valid date
+        .try(Joi.string().custom(isValidISODateString), Joi.valid(null))
         .optional()
         .messages({
-          "date.base": "End date must be a valid date or null.",
+          "string.isoDate": "End date must be a valid ISO date string or null.",
         }),
     })
       .optional()

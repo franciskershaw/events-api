@@ -21,7 +21,7 @@ export const createEvent = async (
     eventData.createdBy = userId;
 
     if (!eventData.date.end) {
-      eventData.date.end = eventData.date.start;
+      eventData.date.end = String(eventData.date.start);
     }
 
     const event = new Event(eventData);
@@ -59,7 +59,7 @@ export const updateEvent = async (
 
     if (
       value.date?.start &&
-      !dayjs(value.date.start).isSame(event.date.start, "day")
+      !dayjs(value.date.start).isSame(dayjs(event.date.start), "day")
     ) {
       const linkedEventsExist = await Event.exists({ copiedFrom: eventId });
 
@@ -144,7 +144,8 @@ export const getUserEvents = async (
 ) => {
   try {
     const userId = (req.user as IUser)._id;
-    const now = dayjs().startOf("day").toDate();
+    // Convert now to ISO string format without timezone for consistent comparison with our stored dates
+    const now = dayjs().startOf("day").format("YYYY-MM-DDTHH:mm:ss");
 
     // Get the current user with their connections
     const currentUser = await User.findById(userId).select("connections");
@@ -257,7 +258,7 @@ export const getPastEvents = async (
     const pageLimit = parseInt(limit as string, 10);
 
     const filters: any = {
-      "date.end": { $lt: new Date() },
+      "date.end": { $lt: dayjs().format("YYYY-MM-DDTHH:mm:ss") },
     };
 
     if (category) filters.category = category;
@@ -305,8 +306,8 @@ export const getPastMonthEvents = async (
 ) => {
   try {
     const userId = (req.user as IUser)._id;
-    const now = dayjs().startOf("day").toDate(); // Current date at start of day
-    const startOfMonth = dayjs().startOf("month").toDate(); // Start of the current month
+    const now = dayjs().startOf("day").format("YYYY-MM-DDTHH:mm:ss");
+    const startOfMonth = dayjs().startOf("month").format("YYYY-MM-DDTHH:mm:ss");
 
     // Get the current user with their connections
     const currentUser = await User.findById(userId).select("connections");
