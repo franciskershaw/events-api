@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+    "dev:network": "ts-node-dev --respawn --transpile-only src/server.ts --host",
     "docker:dev": "nodemon --watch src --exec ts-node src/server.ts",
     "docker:compose": "docker-compose up --build",
     "build": "tsc",

@@ -13,6 +13,9 @@ import "colors";
 import connectDb from "./core/config/database";
 import { errorHandler } from "./core/middleware/error.middleware";
 
+const isNetworkDevelopmentMode =
+  process.env.NODE_ENV === "development" && process.argv.includes("--host");
+
 // Declare port to run server on
 const PORT = process.env.PORT || 5500;
 
@@ -39,7 +42,9 @@ app.use(helmet());
 // Cors
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN,
+    origin: isNetworkDevelopmentMode
+      ? process.env.CORS_ORIGIN_NETWORK
+      : process.env.CORS_ORIGIN,
     credentials: true,
   })
 );
@@ -62,13 +67,25 @@ app.use(errorHandler);
 // Connect to DB and start the server
 connectDb()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(
-        `Server running in ${process.env.NODE_ENV} mode on port ${PORT}\n`
-          .yellow,
-        "-----------------------------------------------------------".yellow
-      );
-    });
+    // For network development mode only, bind to all interfaces
+    if (isNetworkDevelopmentMode) {
+      app.listen(parseInt(PORT as string, 10), "0.0.0.0", () => {
+        console.log(
+          `Server running in ${process.env.NODE_ENV} mode on network (0.0.0.0:${PORT})\n`
+            .yellow,
+          "-----------------------------------------------------------".yellow
+        );
+      });
+    } else {
+      // Normal mode
+      app.listen(PORT, () => {
+        console.log(
+          `Server running in ${process.env.NODE_ENV} mode on port ${PORT}\n`
+            .yellow,
+          "-----------------------------------------------------------".yellow
+        );
+      });
+    }
   })
   .catch((err) => {
     console.error(
