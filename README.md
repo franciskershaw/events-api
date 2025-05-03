@@ -51,8 +51,9 @@ src/
 ### Prerequisites
 
 - Node.js (v14 or higher)
-- MongoDB
+- MongoDB (for local development without Docker)
 - Google OAuth credentials (for Google sign-in)
+- Docker and Docker Compose (for Docker-based development)
 
 ### Installation
 
@@ -65,14 +66,15 @@ git clone [repository-url]
 2. Create a `.env` file in the root directory:
 
 ```env
-PORT=your_port_of_choice
+PORT=5500
 NODE_ENV=development
 MONGO_URI=your_mongodb_uri
 JWT_SECRET=your_jwt_secret
 JWT_REFRESH_SECRET=your_refresh_token_secret
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
-CORS_ORIGIN=http://localhost:client_port_of_choice
+CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN_NETWORK=your_network_cors_origin
 ```
 
 3. Install dependencies
@@ -81,11 +83,49 @@ CORS_ORIGIN=http://localhost:client_port_of_choice
 npm install
 ```
 
-3. Start the development server
+### Development Options
+
+#### Option 1: Local Development (with MongoDB Atlas)
+This option uses your local Node.js installation and connects to MongoDB Atlas.
 
 ```bash
 npm run dev
 ```
+
+#### Option 2: Docker-based Development
+This option runs both the API and MongoDB in Docker containers.
+
+```bash
+npm run dev:docker
+```
+
+The Docker setup will:
+- Run MongoDB locally in a container
+- Run your API in a container
+- Enable hot reloading
+- Persist MongoDB data between restarts
+
+### Environment Variables
+
+For Docker-based development, you can either:
+1. Use the `.env` file (Docker Compose will automatically load it)
+2. Set environment variables in your shell before running Docker Compose
+3. Use the default values provided in the `docker-compose.yml` file
+
+## Running MongoDB locally
+
+1. Install MongoDb locally using brew
+
+```
+  brew tap mongodb/brew
+  brew install mongodb-community
+```
+All being well you can run `brew services start mongodb-community`. You should be able to see output when running the `mongosh` command in your terminal
+
+2. Open MongoDB compass and create a new connection that connects to `localhost:27017`
+
+3. Run `npm run dev:local`
+
 
 ### 🎲 Mock Data Generation
 

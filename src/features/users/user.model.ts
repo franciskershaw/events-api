@@ -52,6 +52,7 @@ const UserSchema = new mongoose.Schema(
       id: {
         type: String,
         unique: true,
+        sparse: true,
       },
       expiry: {
         type: Date,

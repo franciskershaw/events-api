@@ -1,17 +1,29 @@
 version: "3.8"
 
 services:
+  mongo:
+    image: mongo:8.0.9
+    container_name: events-mongo-dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: events-api-dev
+
   api:
     build:
       context: .
       dockerfile: Dockerfile.dev  # for development
+    container_name: events-api-dev
     ports:
       - "5500:5500"
     environment:
       - NODE_ENV=development
       - PORT=5500
-      - MONGO_URI=${MONGO_URI}
-      - CORS_ORIGIN=${CORS_ORIGIN}
+      - MONGO_URI=mongodb://mongo:27017/events-api-dev
+      - CORS_ORIGIN=${CORS_ORIGIN:-http://localhost:5173}
+      - CORS_ORIGIN_NETWORK=${CORS_ORIGIN_NETWORK}
       - JWT_SECRET=${JWT_SECRET} 
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET} 
       - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID} 
@@ -20,4 +32,9 @@ services:
     volumes:
       - .:/usr/src/app # Mount code for hot reloading
       - /usr/src/app/node_modules # Avoids overwriting node_modules in container
-    command: npm run docker:dev # Use the docker:dev script for hot reloading
+    command: nodemon --watch src --exec ts-node src/server.ts
+    depends_on:
+      - mongo
+
+volumes:
+  mongo_data:
