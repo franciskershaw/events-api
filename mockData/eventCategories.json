@@ -1,0 +1,138 @@
+[
+  {
+    "_id": {
+      "$oid": "671ce249c4824cca15337298"
+    },
+    "name": "Party",
+    "icon": "cake",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce25bc4824cca1533729c"
+    },
+    "name": "Dinner",
+    "icon": "knifeFork",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce26ac4824cca153372a0"
+    },
+    "name": "Other",
+    "icon": "calendar",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce214c4824cca1533728e"
+    },
+    "name": "Gig",
+    "icon": "guitar",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce263c4824cca1533729e"
+    },
+    "name": "Holiday",
+    "icon": "plane",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "6777b3505afa97550ab9bb87"
+    },
+    "name": "In Transit",
+    "icon": "train",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "677906bf5afa97550ab9bb97"
+    },
+    "name": "Anniversary",
+    "icon": "calendar_2",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "677907425afa97550ab9bb98"
+    },
+    "name": "Reminder",
+    "icon": "bell",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "6777b13c5afa97550ab9bb84"
+    },
+    "name": "Appointment",
+    "icon": "doctor",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce239c4824cca15337294"
+    },
+    "name": "Wedding",
+    "icon": "church",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce278c4824cca153372a2"
+    },
+    "name": "Work",
+    "icon": "briefcase",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "6777b1525afa97550ab9bb85"
+    },
+    "name": "Night Out",
+    "icon": "dancer",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "677903015afa97550ab9bb96"
+    },
+    "name": "Activity",
+    "icon": "walk",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce22ec4824cca15337292"
+    },
+    "name": "Sport",
+    "icon": "football",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce224c4824cca15337290"
+    },
+    "name": "Festival",
+    "icon": "circus",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce241c4824cca15337296"
+    },
+    "name": "Birthday",
+    "icon": "cake",
+    "__v": 0
+  },
+  {
+    "_id": {
+      "$oid": "671ce251c4824cca1533729a"
+    },
+    "name": "Drinks",
+    "icon": "beer",
+    "__v": 0
+  }
+]
